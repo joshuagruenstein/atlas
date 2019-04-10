@@ -1,0 +1,7 @@
+body, html, #main {
+	height:100%;
+}
+
+#sidebar {
+	overflow-y:scroll;
+}

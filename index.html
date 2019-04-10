@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Atlas: Loss Surface Visualization</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<div class="off-canvas off-canvas-sidebar-show" id="main">
+    
+    <div class="off-canvas-sidebar bg-primary" id="sidebar">
+
+        <div class="container pt-2">
+
+        <h4 class="text-center pt-2">Variables</h4>
+
+        <ul class="menu text-primary" style="width:250px">
+            <li class="menu-item pt-2">
+                <div class="input-group">
+                    <input class="form-input" type="text" placeholder="Variable">
+                    <select class="form-select">
+                        <option>Scalar</option>
+                        <option>Vector</option>
+                        <option>Matrix</option>
+                    </select>
+                </div>
+            </li>
+
+            <li class="menu-item pt-2">
+                <div class="input-group">
+                    <span class="input-group-addon ">Shape</span>
+                    <input class="form-input" type="number" size="2" placeholder="i">
+                    <input class="form-input " type="number" size="2" placeholder="j">
+                </div>
+            </li>
+
+            <li class="menu-item pt-2">
+                <div class="input-group">
+                    <span class="input-group-addon ">Value</span>
+                    <input class="form-input" type="number" size="2" placeholder="10">
+                </div>
+            </li>
+
+
+            <li class="menu-item">
+                <a href="#">
+                    <i class="icon icon-apps"></i> Set Value
+                </a>
+            </li>
+
+            <li class="divider"></li>
+
+            <li class="menu-item">
+                <label class="form-switch">
+                    <input type="checkbox">
+                    <i class="form-icon"></i> Trainable
+                </label>
+            </li>
+        </ul>
+
+        <ul class="menu text-primary mt-2" style="width:250px">
+            <li class="menu-item">
+                <a href="#">
+                    <i class="icon icon-plus"></i> New Variable
+                </a>
+            </li>
+        </ul>
+
+
+    </div>
+  
+
+    </div>
+
+    <a class="off-canvas-overlay" href="#close"></a>
+
+    <div class="off-canvas-content pl-2">
+
+        <header class="navbar p-2">
+          <section class="navbar-section">
+            <a class="btn btn-action" href="#sidebar"> <i class="icon icon-menu"></i></a>
+          </section>
+          <section class="navbar-center">
+            <span class="text-primary">Atlas</span>
+          </section>
+          <section class="navbar-section">
+             <button class="btn mr-2 btn-action"><i class="icon icon-emoji"></i></button>
+             <button class="btn ml-2 btn-action"><i class="icon icon-share"></i></button>
+          </section>
+
+        </header>
+
+    </div>
+</div>
+
+<!--
+-->
+
+    <script src="index.js"></script>
+
+</body>
+</html>
