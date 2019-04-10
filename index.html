@@ -98,13 +98,87 @@
 
         </header>
 
+        <div class="container">
+        
+            <div class="columns">
+                <div class="column col-12">
+                    <textarea class="form-input mt-2 input-lg" rows="3" placeholder="Type expression to minimize here" id="expressionSource"></textarea>
+                    <div class="text-center" id="expressionRendering">``</div>
+                </div>
+
+                <div class="column col-md-9">
+
+                    <div class="empty panel">
+                        <p class="empty-title h5">The loss surface has not been generated.</p>
+                        <p class="empty-subtitle">Click the button to begin visualization.  This may take some time.</p>
+
+                        <div class="empty-action">
+                            <button class="btn btn-primary">Generate loss surface</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="column col-md-3">
+                    <ul class="menu">
+                    
+                        <li class="divider" data-content="SURFACE"></li>
+
+                        <li class="menu-item">
+                            <div class="input-group">
+                                <span class="input-group-addon">Points</span>
+                                <input class="form-input" type="number" size="2" value="1000">
+                            </div>
+                        </li>
+
+                        <li class="menu-item">
+                            <label class="form-switch">
+                                <input type="checkbox">
+
+                                <i class="form-icon"></i> Show optimizer path
+                            </label>
+                        </li>
+
+                        <li class="divider" data-content="OPTIMIZER"></li>
+
+                        <li class="menu-item">
+                            <select class="form-select">
+                                <option>SGD</option>
+                                <option>Momentum</option>
+                                <option>Adagrad</option>
+                                <option>Adadelta</option>
+                                <option>Adam</option>
+                                <option>RMSProp</option>
+                            </select>
+                        </li>
+
+                        <li class="menu-item pt-2">
+                            <div class="input-group">
+                                <span class="input-group-addon ">Learning Rate</span>
+                                <input class="form-input" type="number" size="2" placeholder="0.01">
+                            </div>
+                        </li>
+
+                        <li class="menu-item pt-2 pb-2">
+                            <div class="input-group">
+                                <span class="input-group-addon ">Steps</span>
+                                <input class="form-input" type="number" size="2" value="50">
+                            </div>
+                        </li>
+
+
+                    </ul>
+                </div>
+            </div>
+        
+        </div>
+
     </div>
 </div>
 
-<!--
--->
 
-    <script src="index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=AM_CHTML"></script>
+<script src="index.js"></script>
 
 </body>
 </html>

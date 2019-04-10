@@ -5,3 +5,8 @@ body, html, #main {
 #sidebar {
 	overflow-y:scroll;
 }
+
+#expressionRendering {
+	font-size: 1.5em !important;
+	margin:1em;
+}
