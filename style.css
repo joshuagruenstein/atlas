@@ -10,3 +10,9 @@ body, html, #main {
 	font-size: 1.5em !important;
 	margin:1em;
 }
+
+@media only screen and (min-width : 960px) {
+  a[href='#sidebar'] {
+    display: none;
+  }
+}
