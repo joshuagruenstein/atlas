@@ -1,13 +1,13 @@
 @{%
     import UI from './ui.js';
     let vars = UI.getVariables();
-    function getTF(var) {
-        switch (var['type']) {
+    function getTF(v) {
+        switch (v.type) {
             case 'Scalar':
-                return var['trainable'] ? tf.scalar(Math.random()).variable() : tf.scalar(var['data']);
+                return v.trainable ? tf.scalar(Math.random()).variable() : tf.scalar(v.data);
                 break;
             case 'Vector':
-                return var['trainable'] ? tf.tensor1d(Math.random()).variable() : tf.tensor1d(Math.random());
+                return v.trainable ? tf.tensor1d(Math.random()).variable() : tf.tensor1d(v.data);
                 break;
             default:
                 return 'uh oh';
@@ -15,9 +15,9 @@
         }
     }
     function getVariable(varName) {
-        vars.forEach((var, i) => {
-            if (var['name'] === varName) {
-                return getTF(var);
+        vars.forEach((v, i) => {
+            if (v.name === varName) {
+                return getTF(v);
             }
         });
         return "uH OH";
