@@ -183,7 +183,7 @@ const settingsBox = settings => html`
         <li class="menu-item">
             <div class="input-group">
                 <span class="input-group-addon">Points</span>
-                <input class="form-input" type="number" size="2" value="1000" />
+                <input class="form-input" type="number" size="2" value="10" />
             </div>
         </li>
 
