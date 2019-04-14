@@ -15,13 +15,15 @@ var cancel = false;
 async function generateLossSurface(model, data, labels, runPCA, showPath, epochs = 5, granularity = 10, learningRate = .01) {
     running = true;
 
-    await trainModel(model, data, labels, epochs, runPCA, showPath, learningRate);
+    const trainData = await trainModel(model, data, labels, epochs, runPCA, showPath, learningRate);
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
-    const normalizedRandomWeightVectorA = await randomNormalizedWeightVector(model);
-    const normalizedRandomWeightVectorB = await randomNormalizedWeightVector(model);
+    const weightVectorA = runPCA ? trainData["pca"][0] : await randomNormalizedWeightVector(model);
+    const weightVectorB = runPCA ? trainData["pca"][1] : await randomNormalizedWeightVector(model);
 
-    const lossSurface = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedRandomWeightVectorA, normalizedRandomWeightVectorB, granularity);
+    const pathPositions = showPath ? await computeWeightTrajectoryPositions(trainData["weightVectors"], optimalWeightVector, weightVectorA, weightVectorB) : null;
+
+    const lossSurface = await computeLossSurface(model, data, labels, optimalWeightVector, weightVectorA, weightVectorB, granularity);
 
     running = false;
     return lossSurface;
@@ -145,7 +147,7 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = false, showP
     const onEpochEnd = async (epoch) => {
         await reportLossSurfaceGenerationProgress("Training model", epoch / epochs);
         if (runPCA || showPath) {
-            weightVectors.push(await (await modelWeightsToWeightVector(model)).data());
+            weightVectors.push(await modelWeightsToWeightVector(model));
         }
     }
 
@@ -158,12 +160,14 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = false, showP
     });
 
     if (runPCA) {
-        await reportLossSurfaceGenerationProgress("Running PCA (this may take a while)", 0, true);
+        await reportLossSurfaceGenerationProgress("Running PCA (this page may freeze)", 0, true);
 
-        const pca = new PCA.getEigenVectors(weightVectors);
+        const weightVectorsOnCPU = await Promise.all(weightVectors.map(w => w.data()));
 
-        const vectorA = pca[0].vector;
-        const vectorB = pca[1].vector;
+        const pca = new PCA.getEigenVectors(weightVectorsOnCPU);
+
+        const vectorA = tf.tensor(pca[0].vector);
+        const vectorB = tf.tensor(pca[1].vector);
         await reportLossSurfaceGenerationProgress("Running PCA", 1);
 
         return {
@@ -175,6 +179,20 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = false, showP
           "weightVectors": weightVectors
         };
     }
+}
+
+/**
+ * Project each of the weight vectors onto 2D coordinates.
+ */
+async function computeWeightTrajectoryPositions(weightVectors, optimalWeightVector, weightVectorA, weightVectorB) {
+    console.log(weightVectorA);
+    const normalizedA = weightVectorA.div(weightVectorA.norm('euclidean'));
+    const normalizedB = weightVectorB.div(weightVectorB.norm('euclidean'));
+
+    return await Promise.all(weightVectors.map(async weightVector => {
+        const diff = weightVector.sub(optimalWeightVector);
+        return [(await diff.dot(normalizedA).data())[0], (await diff.dot(normalizedB).data())[0]];
+    }));
 }
 
 /**
