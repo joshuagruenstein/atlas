@@ -34,11 +34,12 @@ class UI {
     }
 
     changeOptimizer() {
-        this.settings['optimizer'] =
-            this.settingsBoxDOM.children[0].children[5].children[0].value;
-        
+        this.settings[
+            'optimizer'
+        ] = this.settingsBoxDOM.children[0].children[5].children[0].value;
+
         this.refreshView();
-    };
+    }
 
     typeChangeVariable(variable) {
         let menu = Array.from(this.variableBoxDOM.children).filter(
@@ -76,7 +77,8 @@ class UI {
             arr[row] = arr[row] || [];
             arr[row][col] = arr[row][col] || '';
 
-            if (cc == '"') return this.renderError('No quotes allowed in CSV files.');
+            if (cc == '"')
+                return this.renderError('No quotes allowed in CSV files.');
             if (cc == ',') {
                 ++col;
                 continue;
@@ -133,7 +135,10 @@ class UI {
 
                 let reader = new FileReader();
                 reader.onload = function(event) {
-                    variable['data'] = this.parseCSV(event.target.result, variable.type);
+                    variable['data'] = this.parseCSV(
+                        event.target.result,
+                        variable.type
+                    );
                 };
 
                 reader.readAsText(file);
@@ -157,9 +162,24 @@ class UI {
     refreshView() {
         render(navbarBox(this.showModal.bind(this)), this.navbarBoxDOM);
 
-        render(variableBox(this.variables, this.typeChangeVariable.bind(this), this.csvVariable.bind(this), this.deleteVariable.bind(this), this.newVariable.bind(this)), this.variableBoxDOM);
-        render(settingsBox(this.settings, this.changeOptimizer.bind(this)), this.settingsBoxDOM);
-        render(messageBox(this.messages, this.deleteMessage.bind(this)), this.messageBoxDOM);
+        render(
+            variableBox(
+                this.variables,
+                this.typeChangeVariable.bind(this),
+                this.csvVariable.bind(this),
+                this.deleteVariable.bind(this),
+                this.newVariable.bind(this)
+            ),
+            this.variableBoxDOM
+        );
+        render(
+            settingsBox(this.settings, this.changeOptimizer.bind(this)),
+            this.settingsBoxDOM
+        );
+        render(
+            messageBox(this.messages, this.deleteMessage.bind(this)),
+            this.messageBoxDOM
+        );
     }
 
     closeModal() {
@@ -191,21 +211,33 @@ class UI {
     }
 
     setVisualizerStart() {
-        return render(startVisualizerBox(this.onStart.bind(this)), this.visualizerBoxDOM);
+        return render(
+            startVisualizerBox(this.onStart.bind(this)),
+            this.visualizerBoxDOM
+        );
     }
 
     setVisualizerLoading(progress, message) {
-        return render(loadVisualizerBox(progress, message, this.onCancel.bind(this)), this.visualizerBoxDOM);
+        return render(
+            loadVisualizerBox(progress, message, this.onCancel.bind(this)),
+            this.visualizerBoxDOM
+        );
     }
 
-    setVisualizerPlotSurface(data, path=null) {
-        render(plotVisualizerBox(this.onCancel.bind(this)), this.visualizerBoxDOM);
+    setVisualizerPlotSurface(data, path = null) {
+        render(
+            plotVisualizerBox(this.onCancel.bind(this)),
+            this.visualizerBoxDOM
+        );
         let plot = new Plot('plotBox', 'Loss Surface');
         plot.surface(data, path);
     }
 
     setVisualizerPlotLine(x, y) {
-        render(plotVisualizerBox(this.onCancel.bind(this)), this.visualizerBoxDOM);
+        render(
+            plotVisualizerBox(this.onCancel.bind(this)),
+            this.visualizerBoxDOM
+        );
         let plot = new Plot('plotBox', 'Loss Curve');
         plot.line(x, y);
     }
@@ -216,7 +248,9 @@ class UI {
 
             let name = el.children[0].children[0].children[0].value;
             if (name.length !== 1)
-                return this.renderError('Variable names must be single letters.');
+                return this.renderError(
+                    'Variable names must be single letters.'
+                );
             if (!/^[a-z]+$/i.test(name))
                 return this.renderError('Variable names must be letters only.');
 
@@ -242,18 +276,24 @@ class UI {
                     );
                 else el.variable['length'] = parseInt(length);
 
-                if (!el.variable.trainable && (!el.variable['data'] || !Array.isArray(el.variable['data'])))
-                    return this.renderError("Must provide CSV data for non-trainable vectors.");
-
+                if (
+                    !el.variable.trainable &&
+                    (!el.variable['data'] ||
+                        !Array.isArray(el.variable['data']))
+                )
+                    return this.renderError(
+                        'Must provide CSV data for non-trainable vectors.'
+                    );
                 else if (!el.variable['data']) el.variable['data'] = null;
-
-                else if (!Array.isArray(el.variable['data']) || el.variable.data.length !== el.variable.length)
+                else if (
+                    !Array.isArray(el.variable['data']) ||
+                    el.variable.data.length !== el.variable.length
+                )
                     return this.renderError(
                         `Vector ${name} has declared length ${length} but CSV length ${
                             el.variable.data.length
                         }.`
                     );
-
             } else {
                 let length_i = el.children[1].children[0].children[1].value;
                 let length_j = el.children[1].children[0].children[2].value;
@@ -268,8 +308,14 @@ class UI {
                         parseInt(length_j)
                     ];
 
-                if (!el.variable.trainable && (!el.variable['data'] || !Array.isArray(el.variable['data'])))
-                    return this.renderError('Must upload initial CSV for non-trainable matrices.');
+                if (
+                    !el.variable.trainable &&
+                    (!el.variable['data'] ||
+                        !Array.isArray(el.variable['data']))
+                )
+                    return this.renderError(
+                        'Must upload initial CSV for non-trainable matrices.'
+                    );
                 else if (!el.variable['data']) el.variable['data'] = null;
                 else if (
                     !Array.isArray(el.variable['data']) ||
@@ -285,16 +331,14 @@ class UI {
                         ]}.`
                     );
             }
-
         }
 
         return this.variables;
     }
 
     getSettings() {
-        let granularity =
-            this.settingsBoxDOM.children[0].children[1].children[0].children[1]
-                .value;
+        let granularity = this.settingsBoxDOM.children[0].children[1]
+            .children[0].children[1].value;
         if (isNaN(granularity) || parseInt(granularity) < 0)
             return this.renderError(
                 'Must provide positive integer granularity.'
@@ -302,40 +346,43 @@ class UI {
 
         this.settings['granularity'] = parseInt(granularity);
 
-        this.settings['showPath'] =
-            this.settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
+        this.settings[
+            'showPath'
+        ] = this.settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
 
-        this.settings['usePCA'] =
-            this.settingsBoxDOM.children[0].children[3].children[0].children[0].checked;
+        this.settings[
+            'usePCA'
+        ] = this.settingsBoxDOM.children[0].children[3].children[0].children[0].checked;
 
-        let lr =
-            this.settingsBoxDOM.children[0].children[6].children[0].children[1]
-                .value;
+        let lr = this.settingsBoxDOM.children[0].children[6].children[0]
+            .children[1].value;
         if (isNaN(lr) || parseFloat(lr) < 0)
-            return this.renderError('Must provide positive numeric learning rate.');
+            return this.renderError(
+                'Must provide positive numeric learning rate.'
+            );
 
         this.settings['learningRate'] = parseFloat(lr);
 
         if (this.settings['optimizer'] === 'Momentum') {
-            let momentum =
-                this.settingsBoxDOM.children[0].children[7].children[0].children[1]
-                    .value;
+            let momentum = this.settingsBoxDOM.children[0].children[7]
+                .children[0].children[1].value;
             if (isNaN(momentum) || parseFloat(momentum) < 0)
-                return this.renderError('Must provide positive numeric momentum.');
+                return this.renderError(
+                    'Must provide positive numeric momentum.'
+                );
             this.settings['momentum'] = parseFloat(momentum);
         } else delete this.settings.momentum;
 
-        let epochs =
-            this.settingsBoxDOM.children[0].children[
-                this.settings['optimizer'] === 'Momentum' ? 8 : 7
-            ].children[0].children[1].value;
+        let epochs = this.settingsBoxDOM.children[0].children[
+            this.settings['optimizer'] === 'Momentum' ? 8 : 7
+        ].children[0].children[1].value;
 
         if (isNaN(epochs) || parseInt(epochs) < 0)
             return this.renderError(
                 'Must provide positive integer number of epochs.'
             );
         this.settings['epochs'] = parseInt(epochs);
-            
+
         return this.settings;
     }
 }
