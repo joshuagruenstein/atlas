@@ -25,8 +25,10 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
 
     const lossSurface = await computeLossSurface(model, data, labels, optimalWeightVector, weightVectorA, weightVectorB, granularity);
 
+    await reportLossSurfaceGenerationProgress("Drawing plot ... ", 0, true);
+
     running = false;
-    return lossSurface;
+    return { lossSurface, pathPositions };
 }
 
 /**
@@ -220,7 +222,7 @@ async function test() {
     const data = tf.randomNormal([100, 78]);
     const labels = tf.randomUniform([100, 10]);
 
-    const lossSurface = await generateLossSurface(
+    const lossData = await generateLossSurface(
       model,
       data,
       labels,
@@ -232,8 +234,8 @@ async function test() {
     
     await reportLossSurfaceGenerationProgress("All done! :) ", 1);
 
-    if (lossSurface) {
-        UI.setVisualizerPlotSurface(lossSurface);
+    if (lossData.lossSurface) {
+        UI.setVisualizerPlotSurface(lossData.lossSurface, lossData.pathPositions);
     } else {
         UI.setVisualizerStart();
     }
