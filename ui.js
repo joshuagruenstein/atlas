@@ -228,7 +228,7 @@ const settingsBox = settings => html`
         <li class="menu-item">
             <div class="input-group">
                 <span class="input-group-addon">Granularity</span>
-                <input class="form-input" type="number" size="2" value="1000" />
+                <input class="form-input" type="number" size="2" value="10" />
             </div>
         </li>
 
@@ -574,7 +574,7 @@ class UI {
 
         let epochs =
             settingsBoxDOM.children[0].children[
-                SETTINGS['optimizer'] === 'Momentum' ? 7 : 6
+                SETTINGS['optimizer'] === 'Momentum' ? 8 : 7
             ].children[0].children[1].value;
 
         if (isNaN(epochs) || parseInt(epochs) < 0)
@@ -582,7 +582,7 @@ class UI {
                 'Must provide positive integer number of epochs.'
             );
         SETTINGS['epochs'] = parseInt(epochs);
-
+            
         return SETTINGS;
     }
 }
