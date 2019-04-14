@@ -474,6 +474,9 @@ class UI {
                 return renderError('Variable names must be letters only.');
 
             el.variable['name'] = name;
+            el.variable['trainable'] = el.getElementsByClassName(
+                'form-switch'
+            )[0].children[0].checked;
 
             if (el.variable.type === 'Scalar') {
                 let value = el.children[1].children[0].children[1].value;
@@ -492,14 +495,18 @@ class UI {
                     );
                 else el.variable['length'] = parseInt(length);
 
-                if (!el.variable['data'] || !Array.isArray(el.variable['data']))
-                    return renderError('Must upload initial CSV for vectors.');
-                else if (el.variable.data.length !== el.variable.length)
+                if (!el.variable.trainable && (!el.variable['data'] || !Array.isArray(el.variable['data'])))
+                    return renderError("Must provide CSV data for non-trainable vectors.");
+
+                else if (!el.variable['data']) el.variable['data'] = null;
+
+                else if (!Array.isArray(el.variable['data']) || el.variable.data.length !== el.variable.length)
                     return renderError(
                         `Vector ${name} has declared length ${length} but CSV length ${
                             el.variable.data.length
                         }.`
                     );
+
             } else {
                 let length_i = el.children[1].children[0].children[1].value;
                 let length_j = el.children[1].children[0].children[2].value;
@@ -514,9 +521,11 @@ class UI {
                         parseInt(length_j)
                     ];
 
-                if (!el.variable['data'] || !Array.isArray(el.variable['data']))
-                    return renderError('Must upload initial CSV for matrices.');
+                if (!el.variable.trainable && (!el.variable['data'] || !Array.isArray(el.variable['data'])))
+                    return renderError('Must upload initial CSV for non-trainable matrices.');
+                else if (!el.variable['data']) el.variable['data'] = null;
                 else if (
+                    !Array.isArray(el.variable['data']) ||
                     el.variable.data.length !== el.variable.shape[0] ||
                     el.variable.data[0].length !== el.variable.shape[1]
                 )
@@ -530,9 +539,6 @@ class UI {
                     );
             }
 
-            el.variable['trainable'] = el.getElementsByClassName(
-                'form-switch'
-            )[0].children[0].checked;
         }
 
         return VARIABLES;
