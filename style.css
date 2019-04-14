@@ -16,3 +16,7 @@ body, html, #main {
     display: none;
   }
 }
+
+#plotBox {
+	margin: 0 auto;
+}

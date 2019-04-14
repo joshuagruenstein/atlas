@@ -32,7 +32,7 @@
 
     <a class="off-canvas-overlay" href="#close"></a>
 
-    <div class="off-canvas-content pl-2">
+    <div class="off-canvas-content pl-2" style="overflow-y:scroll">
 
         <header class="navbar p-2">
           <section class="navbar-section">
@@ -58,18 +58,7 @@
                     <div class="text-center" id="expressionRendering">``</div>
                 </div>
 
-                <div class="column col-md-9">
-
-                    <div class="empty panel">
-                        <p class="empty-title h5">The loss surface has not been generated.</p>
-                        <p class="empty-subtitle">Click the button to begin visualization.  This may take some time.</p>
-
-                        <div class="empty-action">
-                            <button class="btn btn-primary">Generate loss surface</button>
-                        </div>
-                    </div>
-
-                </div>
+                <div class="column col-md-9" id="visualizerBox"></div>
 
                 <div class="column col-md-3" id='settingsBox'></div>
             </div>
@@ -81,6 +70,7 @@
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=AM_CHTML"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <script>
 window.MathJax = {

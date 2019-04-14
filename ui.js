@@ -1,12 +1,51 @@
 import {html, render} from 'https://unpkg.com/lit-html?module';
+import Plot from './plot.js';
 
 const variableBoxDOM = document.getElementById("variableBox");
 const messageBoxDOM = document.getElementById("messageBox");
 const settingsBoxDOM = document.getElementById("settingsBox");
+const visualizerBoxDOM = document.getElementById("visualizerBox");
 
 const VARIABLES = [];
 const MESSAGES = [];
 const SETTINGS = {};
+
+let ON_VISUALIZER_CLICK;
+let ON_VISUALIZER_CANCEL;
+let ON_LOAD;
+
+const startVisualizerBox = () => html `
+    <div class="empty panel">
+        <p class="empty-title h5">The loss surface has not been generated.</p>
+        <p class="empty-subtitle">Click the button to begin visualization.  This may take some time.</p>
+
+        <div class="empty-action">
+            <button class="btn btn-primary" @click=${ON_VISUALIZER_CLICK}>Generate loss surface</button>
+        </div>
+    </div>
+`
+
+const plotVisualizerBox = () => html `
+    <div class="panel">
+        <div id="plotBox"></div>
+        <button class="btn btn-error m-2" @click=${ON_VISUALIZER_CANCEL}>Cancel</button>
+    </div>
+`
+
+const loadVisualizerBox = (progress, message) => html `
+    <div class="empty panel">
+        <p class="empty-title h5">The loss surface is being generated.</p>
+        <p class="empty-subtitle" style="width:100%">
+            <p>${message}</p>
+            <progress class="progress" value=${progress} max="100"></progress>
+        </p>
+
+        <div class="empty-action">
+            <button class="btn btn-error" @click=${ON_VISUALIZER_CANCEL}>Cancel</button>
+        </div>
+    </div>
+`
+
 
 const variable = variable => html `
     <ul class="menu text-primary mt-2" style="width:250px" .variable=${variable}>
@@ -259,9 +298,41 @@ const renderMessage = (type, message) => {
 }
 
 class UI {
+    setOnloadHandler = handler => {
+        ON_LOAD = handler;
+    }
+
     renderError = errorMessage => renderMessage('error', errorMessage);
 
     renderSuccess = successMessage => renderMessage('success', successMessage);
+
+    setVisualizerStartHandler = handler => {
+        ON_VISUALIZER_CLICK = handler;
+    }
+
+    setVisualizerCancelHandler = handler => {
+        ON_VISUALIZER_CANCEL = handler;
+    }
+
+    setVisualizerStart = () => {
+        render(startVisualizerBox(), visualizerBoxDOM);
+    }
+
+    setVisualizerLoading = (progress, message) => {
+        render(loadVisualizerBox(progress, message), visualizerBoxDOM);
+    }
+
+    setVisualizerPlotSurface = data => {
+        render(plotVisualizerBox(), visualizerBoxDOM);
+        let plot = new Plot('plotBox', 'Loss Surface');
+        plot.surface(data);
+    }
+
+    setVisualizerPlotLine = (x, y) => {
+        render(plotVisualizerBox(), visualizerBoxDOM);
+        let plot = new Plot('plotBox', 'Loss Curve');
+        plot.line(x,y);
+    }
 
     getVariables = () => {
         for (let el of variableBoxDOM.children) {
@@ -338,9 +409,11 @@ class UI {
     }
 }
 
-window.onload = () => {
+window.onload = onload => {
     render(variableBox(VARIABLES), variableBoxDOM);
     render(settingsBox(SETTINGS), settingsBoxDOM);
+    render(startVisualizerBox(), visualizerBoxDOM);
+    ON_LOAD();
 }
 
-export default new UI();
+export default new UI;
