@@ -1,6 +1,4 @@
 @{%
-    import UI from './ui.js';
-    let vars = UI.getVariables();
     function getTF(v) {
         switch (v.type) {
             case 'Scalar':
@@ -15,6 +13,9 @@
         }
     }
     function getVariable(varName) {
+        let vars = UI.getVariables();
+        console.log(vars);
+        console.log(varName);
         vars.forEach((v, i) => {
             if (v.name === varName) {
                 return getTF(v);
@@ -25,7 +26,7 @@
 %}
 
 norm -> 
-    "||" expression "||" {% (_, expr, _) => tf.norm(expr) %}
+    "||" expression "||" {% (_, expr, __) => tf.norm(expr) %}
 
 expression ->
     expression "*" expression {% (fst, _, snd) => tf.mul(fst, snd) %}

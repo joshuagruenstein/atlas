@@ -3,8 +3,6 @@
 (function () {
 function id(x) { return x[0]; }
 
-    import UI from './ui.js';
-    let vars = UI.getVariables();
     function getTF(v) {
         switch (v.type) {
             case 'Scalar':
@@ -19,6 +17,9 @@ function id(x) { return x[0]; }
         }
     }
     function getVariable(varName) {
+        let vars = UI.getVariables();
+        console.log(vars);
+        console.log(varName);
         vars.forEach((v, i) => {
             if (v.name === varName) {
                 return getTF(v);
@@ -31,7 +32,7 @@ var grammar = {
     ParserRules: [
     {"name": "norm$string$1", "symbols": [{"literal":"|"}, {"literal":"|"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "norm$string$2", "symbols": [{"literal":"|"}, {"literal":"|"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "norm", "symbols": ["norm$string$1", "expression", "norm$string$2"], "postprocess": (_, expr, _) => tf.norm(expr)},
+    {"name": "norm", "symbols": ["norm$string$1", "expression", "norm$string$2"], "postprocess": (_, expr, __) => tf.norm(expr)},
     {"name": "expression", "symbols": ["expression", {"literal":"*"}, "expression"], "postprocess": (fst, _, snd) => tf.mul(fst, snd)},
     {"name": "expression", "symbols": ["expression", {"literal":"+"}, "expression"], "postprocess": (fst, _, snd) => tf.add(fst, snd)},
     {"name": "expression", "symbols": ["variable"], "postprocess": id},
