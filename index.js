@@ -2,7 +2,7 @@ import UI from "./ui.js";
 import "./loss_surface_generation.js";
 
 UI.setOnloadHandler(() => {
-    UI.renderSuccess('hi');
+    UI.renderSuccess('GOOD MORNING MR VAMPIRE HOW ARE YOU TODAY EOM.');
 });
 
 // UI.setVisualizerStartHandler(() => {
