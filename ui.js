@@ -174,6 +174,10 @@ class UI {
         );
     }
 
+    getExpression() {
+        return document.getElementById("expressionSource").value;
+    }
+
     setVisualizerLoading(progress, message) {
         return render(
             loadVisualizerBox(progress, message, this.onCancel.bind(this)),
