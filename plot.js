@@ -43,7 +43,7 @@ class Plot {
         Plotly.newPlot(this.div, context, this.layout);
     }
 
-    surface(data, path = null) {
+    surface(data, path) {
         /**
          * @param data 2D array of heights.
          * @param path A list of (x, y) coordinates.
