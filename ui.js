@@ -1,477 +1,224 @@
-import { html, render } from 'https://unpkg.com/lit-html?module';
+import { render } from 'https://unpkg.com/lit-html?module';
+
+import {
+    navbarBox,
+    startVisualizerBox,
+    plotVisualizerBox,
+    loadVisualizerBox,
+    modalBox,
+    variableBox,
+    messageBox,
+    settingsBox
+} from './templates.js';
+
 import Plot from './plot.js';
 
-const variableBoxDOM = document.getElementById('variableBox');
-const messageBoxDOM = document.getElementById('messageBox');
-const settingsBoxDOM = document.getElementById('settingsBox');
-const visualizerBoxDOM = document.getElementById('visualizerBox');
-const modalBoxDOM = document.getElementById('modalBox');
-const navbarBoxDOM = document.getElementById('navbarBox');
+class UI {
+    constructor() {
+        this.variables = [];
+        this.messages = [];
+        this.settings = {};
 
-const VARIABLES = [];
-const MESSAGES = [];
-const SETTINGS = {};
+        this.variableBoxDOM = document.getElementById('variableBox');
+        this.messageBoxDOM = document.getElementById('messageBox');
+        this.settingsBoxDOM = document.getElementById('settingsBox');
+        this.visualizerBoxDOM = document.getElementById('visualizerBox');
+        this.modalBoxDOM = document.getElementById('modalBox');
+        this.navbarBoxDOM = document.getElementById('navbarBox');
 
-let ON_VISUALIZER_CLICK;
-let ON_VISUALIZER_CANCEL;
-let ON_LOAD;
-
-const navbarBox = () => html`
-    <section class="navbar-section">
-        <a class="btn btn-action" href="#sidebar"> <i class="icon icon-menu"></i></a>
-    </section>
-    <section class="navbar-center">
-        <span class="text-primary">Atlas</span>
-    </section>
-    <section class="navbar-section">
-        <button class="btn mr-2 btn-action" @click=${showModal}><i class="icon icon-emoji"></i></button>
-        <button class="btn ml-2 btn-action"><i class="icon icon-share"></i></button>
-    </section>
-`
-
-const startVisualizerBox = () => html`
-    <div class="empty panel">
-        <p class="empty-title h5">The loss surface has not been generated.</p>
-        <p class="empty-subtitle">
-            Click the button to begin visualization. This may take some time.
-        </p>
-
-        <div class="empty-action">
-            <button class="btn btn-primary" @click=${ON_VISUALIZER_CLICK}>
-                Generate loss surface
-            </button>
-        </div>
-    </div>
-`;
-
-const plotVisualizerBox = () => html`
-    <div class="panel">
-        <div id="plotBox"></div>
-        <button class="btn btn-error m-2" @click=${ON_VISUALIZER_CANCEL}>
-            Cancel
-        </button>
-    </div>
-`;
-
-const loadVisualizerBox = (progress, message) => html`
-    <div class="empty panel">
-        <p class="empty-title h5">The loss surface is being generated.</p>
-        <p class="empty-subtitle" style="width:100%">
-            <p>${message}</p>
-            <progress class="progress" value=${progress} max="100"></progress>
-        </p>
-
-        <div class="empty-action">
-            <button class="btn btn-error" @click=${ON_VISUALIZER_CANCEL}>Cancel</button>
-        </div>
-    </div>
-`;
-
-const modalBox = active => html`
-    <div class="modal ${active ? 'active' : ''}" id="modal-id">
-        <a href="#close" @click=${closeModal} class="modal-overlay" aria-label="Close"></a>
-        <div class="modal-container">
-            <div class="modal-header">
-                <a href="#close" @click=${closeModal} class="btn btn-clear float-right" aria-label="Close"></a>
-                <div class="modal-title h5">About Atlas</div>
-            </div>
-
-            <div class="modal-body">
-                <div class="content">
-                    Atlas is an optimization loss surface visualizer built as a final project for <a href='http://math.mit.edu/classes/18.065/2019SP/'>18.065: Matrix Methods In Data Analysis, Signal Processing, And Machine Learning</a>, taught by <a href='http://www-math.mit.edu/~gs/'>Professor Gill Strang</a>.
-                </div>
-            </div>
-            
-            <div class="modal-footer">
-                Created by <a href='https://github.com/mfranzs'>Martin Schneider</a>, <a href='https://github.com/scherna'>Sammy Cherna</a>, <a href='https://github.com/lhirschfeld'>Lior Hirschfeld</a>, and <a href='https://github.com/joshuagruenstein'>Josh Gruenstein</a>.
-            </div>
-        </div>
-    </div>
-`
-
-const closeModal = () => {
-    render(modalBox(false), modalBoxDOM);
-}
-
-const showModal = () => {
-    render(modalBox(true), modalBoxDOM);
-}
-
-const variable = variable => html`
-    <ul
-        class="menu text-primary mt-2"
-        style="width:250px"
-        .variable=${variable}
-    >
-        <li class="menu-item pt-2">
-            <div class="input-group">
-                <input class="form-input" type="text" placeholder="Variable" />
-                <select
-                    class="form-select"
-                    @change=${() => typeChangeVariable(variable)}
-                >
-                    <option>Scalar</option>
-                    <option>Vector</option>
-                    <option>Matrix</option>
-                </select>
-            </div>
-        </li>
-
-        ${variable.type === 'Scalar'
-            ? html`
-                  <li class="menu-item pt-2">
-                      <div class="input-group">
-                          <span class="input-group-addon ">Value</span>
-                          <input
-                              class="form-input"
-                              type="number"
-                              size="2"
-                              placeholder="10"
-                          />
-                      </div>
-                  </li>
-              `
-            : variable.type === 'Vector'
-            ? html`
-                  <li class="menu-item pt-2">
-                      <div class="input-group">
-                          <span class="input-group-addon ">Length</span>
-                          <input
-                              class="form-input"
-                              type="number"
-                              size="2"
-                              placeholder="i"
-                          />
-                      </div>
-                  </li>
-              `
-            : html`
-                  <li class="menu-item pt-2">
-                      <div class="input-group">
-                          <span class="input-group-addon ">Shape</span>
-                          <input
-                              class="form-input"
-                              type="number"
-                              size="2"
-                              placeholder="i"
-                          />
-                          <input
-                              class="form-input "
-                              type="number"
-                              size="2"
-                              placeholder="j"
-                          />
-                      </div>
-                  </li>
-              `}
-        ${variable.type !== 'Scalar'
-            ? html`
-                  <li class="menu-item">
-                      <a href="#" @click=${() => csvVariable(variable)}>
-                          <i class="icon icon-apps"></i> Set Value From CSV
-                      </a>
-                  </li>
-              `
-            : ''}
-
-        <li class="divider"></li>
-
-        <li class="menu-item">
-            <label class="form-switch">
-                <input type="checkbox" />
-                <i class="form-icon"></i> Trainable
-            </label>
-        </li>
-
-        <li class="menu-item">
-            <a
-                href="#"
-                class="text-error"
-                @click=${() => deleteVariable(variable)}
-            >
-                <i class="icon icon-delete"></i> Delete
-            </a>
-        </li>
-    </ul>
-`;
-
-const message = message => html`
-    <div class="toast toast-${message.type} mt-2">
-        <button
-            class="btn btn-clear float-right"
-            @click=${() => deleteMessage(message)}
-        ></button>
-        ${message.content}
-    </div>
-`;
-
-const variableBox = variables => html`
-    ${variables.map(v => variable(v))}
-
-    <ul class="menu text-primary mt-2 mb-2" style="width:250px">
-        <li class="menu-item">
-            <a href="#" @click=${newVariable}>
-                <i class="icon icon-plus"></i> New Variable
-            </a>
-        </li>
-    </ul>
-`;
-
-const messageBox = messages => html`
-    ${messages.map(m => message(m))}
-`;
-
-const settingsBox = settings => html`
-    <ul class="menu">
-        <li class="divider" data-content="SURFACE"></li>
-
-        <li class="menu-item">
-            <div class="input-group">
-                <span class="input-group-addon">Granularity</span>
-                <input class="form-input" type="number" size="2" value="10" />
-            </div>
-        </li>
-
-        <li class="menu-item">
-            <label class="form-switch">
-                <input type="checkbox" />
-
-                <i class="form-icon"></i> Show optimizer path
-            </label>
-        </li>
-
-        <li class="menu-item">
-            <label class="form-switch">
-                <input type="checkbox" />
-
-                <i class="form-icon"></i> Use PCA directions
-            </label>
-        </li>
-
-        <li class="divider" data-content="OPTIMIZER"></li>
-
-        <li class="menu-item">
-            <select class="form-select" @change=${changeOptimizer}>
-                <option>SGD</option>
-                <option>Momentum</option>
-                <option>Adagrad</option>
-                <option>Adadelta</option>
-                <option>Adam</option>
-                <option>RMSProp</option>
-            </select>
-        </li>
-
-        <li class="menu-item pt-2">
-            <div class="input-group">
-                <span class="input-group-addon ">Learning Rate</span>
-                <input
-                    class="form-input"
-                    type="number"
-                    size="2"
-                    placeholder="0.01"
-                />
-            </div>
-        </li>
-
-        ${settings.optimizer === 'Momentum'
-            ? html`
-                  <li class="menu-item pt-2">
-                      <div class="input-group">
-                          <span class="input-group-addon ">Momentum</span>
-                          <input
-                              class="form-input"
-                              type="number"
-                              size="2"
-                              placeholder="0.01"
-                          />
-                      </div>
-                  </li>
-              `
-            : ''}
-
-        <li class="menu-item pt-2 pb-2">
-            <div class="input-group">
-                <span class="input-group-addon ">Epochs</span>
-                <input class="form-input" type="number" size="2" value="50" />
-            </div>
-        </li>
-    </ul>
-`;
-
-const changeOptimizer = () => {
-    SETTINGS['optimizer'] =
-        settingsBoxDOM.children[0].children[5].children[0].value;
-    render(settingsBox(SETTINGS), settingsBoxDOM);
-};
-
-const typeChangeVariable = variable => {
-    let menu = Array.from(variableBoxDOM.children).filter(
-        child => child.variable === variable
-    )[0];
-
-    variable.type = menu.children[0].children[0].children[1].value;
-
-    render(variableBox(VARIABLES), variableBoxDOM);
-};
-
-const renderMessage = (type, message) => {
-    MESSAGES.push({
-        type: type,
-        content: message
-    });
-
-    render(messageBox(MESSAGES), messageBoxDOM);
-
-    return null;
-};
-
-const renderError = errorMessage => renderMessage('error', errorMessage);
-
-const deleteMessage = message => {
-    MESSAGES.splice(MESSAGES.indexOf(message), 1);
-
-    render(messageBox(MESSAGES), messageBoxDOM);
-};
-
-const parseCSV = (str, type) => {
-    let arr = [];
-
-    for (let row = 0, col = 0, c = 0; c < str.length; c++) {
-        let cc = str[c],
-            nc = str[c + 1];
-        arr[row] = arr[row] || [];
-        arr[row][col] = arr[row][col] || '';
-
-        if (cc == '"') return renderError('No quotes allowed in CSV files.');
-        if (cc == ',') {
-            ++col;
-            continue;
-        }
-
-        if (cc == '\r' && nc == '\n') {
-            ++row;
-            col = 0;
-            ++c;
-            continue;
-        }
-
-        if (cc == '\n') {
-            ++row;
-            col = 0;
-            continue;
-        }
-        if (cc == '\r') {
-            ++row;
-            col = 0;
-            continue;
-        }
-
-        arr[row][col] += cc;
+        window.onload = onload => {
+            this.setVisualizerStart();
+            this.refreshView();
+            this.onLoad();
+        };
     }
 
-    if (type === 'Vector' && arr.length > 1)
-        return renderError('Vector CSVs can only have one row.');
-    if (!arr.every((row, i, arr) => row.length === arr[0].length))
-        return renderError('All rows must be same length');
-    if (!arr.every((row, i, arr) => row.every((el, i, row) => !isNaN(el))))
-        return renderError('All CSV elements must be numeric.');
+    changeOptimizer() {
+        this.settings['optimizer'] =
+            this.settingsBoxDOM.children[0].children[5].children[0].value;
+        
+        this.refreshView();
+    };
 
-    arr = arr.map(row => row.map(el => parseFloat(el)));
+    typeChangeVariable(variable) {
+        let menu = Array.from(this.variableBoxDOM.children).filter(
+            child => child.variable === variable
+        )[0];
 
-    if (type === 'Vector') arr = arr[0];
+        variable.type = menu.children[0].children[0].children[1].value;
 
-    return arr;
-};
+        this.refreshView();
+    }
 
-function csvVariable(variable) {
-    let oldPicker = document.getElementById('filePicker');
-    var picker = oldPicker.cloneNode(true);
-    oldPicker.parentNode.replaceChild(picker, oldPicker);
+    renderMessage(type, message) {
+        this.messages.push({
+            type: type,
+            content: message
+        });
 
-    picker.addEventListener(
-        'change',
-        function() {
-            if (picker.files.length === 0) return;
-            let file = picker.files[0];
+        this.refreshView();
 
-            if (file.type !== 'text/csv')
-                return renderError('Must upload valid CSV file.');
+        return null;
+    }
 
-            let reader = new FileReader();
-            reader.onload = function(event) {
-                variable['data'] = parseCSV(event.target.result, variable.type);
-            };
+    deleteMessage(message) {
+        this.messages.splice(this.messages.indexOf(message), 1);
 
-            reader.readAsText(file);
-        },
-        false
-    );
+        this.refreshView();
+    }
 
-    picker.click();
-}
+    parseCSV(str, type) {
+        let arr = [];
 
-const deleteVariable = variable => {
-    VARIABLES.splice(VARIABLES.indexOf(variable), 1);
+        for (let row = 0, col = 0, c = 0; c < str.length; c++) {
+            let cc = str[c],
+                nc = str[c + 1];
+            arr[row] = arr[row] || [];
+            arr[row][col] = arr[row][col] || '';
 
-    render(variableBox(VARIABLES), variableBoxDOM);
-};
+            if (cc == '"') return this.renderError('No quotes allowed in CSV files.');
+            if (cc == ',') {
+                ++col;
+                continue;
+            }
 
-const newVariable = variable => {
-    VARIABLES.push({ type: 'Scalar' });
+            if (cc == '\r' && nc == '\n') {
+                ++row;
+                col = 0;
+                ++c;
+                continue;
+            }
 
-    render(variableBox(VARIABLES), variableBoxDOM);
-};
+            if (cc == '\n') {
+                ++row;
+                col = 0;
+                continue;
+            }
+            if (cc == '\r') {
+                ++row;
+                col = 0;
+                continue;
+            }
 
-class UI {
+            arr[row][col] += cc;
+        }
+
+        if (type === 'Vector' && arr.length > 1)
+            return this.renderError('Vector CSVs can only have one row.');
+        if (!arr.every((row, i, arr) => row.length === arr[0].length))
+            return this.renderError('All rows must be same length');
+        if (!arr.every((row, i, arr) => row.every((el, i, row) => !isNaN(el))))
+            return this.renderError('All CSV elements must be numeric.');
+
+        arr = arr.map(row => row.map(el => parseFloat(el)));
+
+        if (type === 'Vector') arr = arr[0];
+
+        return arr;
+    }
+
+    csvVariable(variable) {
+        let oldPicker = document.getElementById('filePicker');
+        let picker = oldPicker.cloneNode(true);
+        oldPicker.parentNode.replaceChild(picker, oldPicker);
+
+        picker.addEventListener(
+            'change',
+            function() {
+                if (picker.files.length === 0) return;
+                let file = picker.files[0];
+
+                if (file.type !== 'text/csv')
+                    return this.renderError('Must upload valid CSV file.');
+
+                let reader = new FileReader();
+                reader.onload = function(event) {
+                    variable['data'] = this.parseCSV(event.target.result, variable.type);
+                };
+
+                reader.readAsText(file);
+            },
+            false
+        );
+
+        picker.click();
+    }
+
+    deleteVariable(variable) {
+        this.variables.splice(this.variables.indexOf(variable), 1);
+        this.refreshView();
+    }
+
+    newVariable(variable) {
+        this.variables.push({ type: 'Scalar' });
+        this.refreshView();
+    }
+
+    refreshView() {
+        render(navbarBox(this.showModal.bind(this)), this.navbarBoxDOM);
+
+        render(variableBox(this.variables, this.typeChangeVariable.bind(this), this.csvVariable.bind(this), this.deleteVariable.bind(this), this.newVariable.bind(this)), this.variableBoxDOM);
+        render(settingsBox(this.settings, this.changeOptimizer.bind(this)), this.settingsBoxDOM);
+        render(messageBox(this.messages, this.deleteMessage.bind(this)), this.messageBoxDOM);
+    }
+
+    closeModal() {
+        render(modalBox(false, this.closeModal.bind(this)), this.modalBoxDOM);
+    }
+
+    showModal() {
+        render(modalBox(true, this.closeModal.bind(this)), this.modalBoxDOM);
+    }
+
     setOnloadHandler(handler) {
-        ON_LOAD = handler;
+        this.onLoad = handler;
     }
 
     renderError(errorMessage) {
-        return renderMessage('error', errorMessage);
+        return this.renderMessage('error', errorMessage);
     }
 
     renderSuccess(successMessage) {
-        return renderMessage('success', successMessage);
+        return this.renderMessage('success', successMessage);
     }
 
     setVisualizerStartHandler(handler) {
-        ON_VISUALIZER_CLICK = handler;
+        this.onStart = handler;
     }
 
     setVisualizerCancelHandler(handler) {
-        ON_VISUALIZER_CANCEL = handler;
+        this.onCancel = handler;
     }
 
     setVisualizerStart() {
-        return render(startVisualizerBox(), visualizerBoxDOM);
+        return render(startVisualizerBox(), this.visualizerBoxDOM);
     }
 
     setVisualizerLoading(progress, message) {
-        return render(loadVisualizerBox(progress, message), visualizerBoxDOM);
+        return render(loadVisualizerBox(progress, message, this.onCancel), this.visualizerBoxDOM);
     }
 
     setVisualizerPlotSurface(data) {
-        render(plotVisualizerBox(), visualizerBoxDOM);
+        render(plotVisualizerBox(this.onCancel), this.visualizerBoxDOM);
         let plot = new Plot('plotBox', 'Loss Surface');
         plot.surface(data);
     }
 
     setVisualizerPlotLine(x, y) {
-        render(plotVisualizerBox(), visualizerBoxDOM);
+        render(plotVisualizerBox(this.onCancel), this.visualizerBoxDOM);
         let plot = new Plot('plotBox', 'Loss Curve');
         plot.line(x, y);
     }
 
     getVariables() {
-        for (let el of variableBoxDOM.children) {
+        for (let el of this.variableBoxDOM.children) {
             if (!el.variable) continue;
 
             let name = el.children[0].children[0].children[0].value;
             if (name.length !== 1)
-                return renderError('Variable names must be single letters.');
+                return this.renderError('Variable names must be single letters.');
             if (!/^[a-z]+$/i.test(name))
-                return renderError('Variable names must be letters only.');
+                return this.renderError('Variable names must be letters only.');
 
             el.variable['name'] = name;
             el.variable['trainable'] = el.getElementsByClassName(
@@ -483,25 +230,25 @@ class UI {
 
                 if (value === '') el.variable['data'] = null;
                 else if (isNaN(value))
-                    return renderError(
+                    return this.renderError(
                         'Scalar values must be empty (random) or numeric.'
                     );
                 else el.variable['data'] = parseFloat(value);
             } else if (el.variable.type === 'Vector') {
                 let length = el.children[1].children[0].children[1].value;
                 if (!/^\d+$/.test(length))
-                    return renderError(
+                    return this.renderError(
                         'Vector lengths must be positive integers.'
                     );
                 else el.variable['length'] = parseInt(length);
 
                 if (!el.variable.trainable && (!el.variable['data'] || !Array.isArray(el.variable['data'])))
-                    return renderError("Must provide CSV data for non-trainable vectors.");
+                    return this.renderError("Must provide CSV data for non-trainable vectors.");
 
                 else if (!el.variable['data']) el.variable['data'] = null;
 
                 else if (!Array.isArray(el.variable['data']) || el.variable.data.length !== el.variable.length)
-                    return renderError(
+                    return this.renderError(
                         `Vector ${name} has declared length ${length} but CSV length ${
                             el.variable.data.length
                         }.`
@@ -512,7 +259,7 @@ class UI {
                 let length_j = el.children[1].children[0].children[2].value;
 
                 if (!/^\d+$/.test(length_i) || !/^\d+$/.test(length_j))
-                    return renderError(
+                    return this.renderError(
                         'Matrix shape must be positive integers.'
                     );
                 else
@@ -522,14 +269,14 @@ class UI {
                     ];
 
                 if (!el.variable.trainable && (!el.variable['data'] || !Array.isArray(el.variable['data'])))
-                    return renderError('Must upload initial CSV for non-trainable matrices.');
+                    return this.renderError('Must upload initial CSV for non-trainable matrices.');
                 else if (!el.variable['data']) el.variable['data'] = null;
                 else if (
                     !Array.isArray(el.variable['data']) ||
                     el.variable.data.length !== el.variable.shape[0] ||
                     el.variable.data[0].length !== el.variable.shape[1]
                 )
-                    return renderError(
+                    return this.renderError(
                         `Matrix ${name} has declared shape ${
                             el.variable.shape
                         } but CSV shape ${[
@@ -541,64 +288,56 @@ class UI {
 
         }
 
-        return VARIABLES;
+        return this.variables;
     }
 
     getSettings() {
         let granularity =
-            settingsBoxDOM.children[0].children[1].children[0].children[1]
+            this.settingsBoxDOM.children[0].children[1].children[0].children[1]
                 .value;
         if (isNaN(granularity) || parseInt(granularity) < 0)
-            return renderError(
+            return this.renderError(
                 'Must provide positive integer granularity.'
             );
 
-        SETTINGS['granularity'] = parseInt(granularity);
+        this.settings['granularity'] = parseInt(granularity);
 
-        SETTINGS['showPath'] =
-            settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
+        this.settings['showPath'] =
+            this.settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
 
-        SETTINGS['usePCA'] =
-            settingsBoxDOM.children[0].children[3].children[0].children[0].checked;
+        this.settings['usePCA'] =
+            this.settingsBoxDOM.children[0].children[3].children[0].children[0].checked;
 
         let lr =
-            settingsBoxDOM.children[0].children[6].children[0].children[1]
+            this.settingsBoxDOM.children[0].children[6].children[0].children[1]
                 .value;
         if (isNaN(lr) || parseFloat(lr) < 0)
-            return renderError('Must provide positive numeric learning rate.');
+            return this.renderError('Must provide positive numeric learning rate.');
 
-        SETTINGS['learningRate'] = parseFloat(lr);
+        this.settings['learningRate'] = parseFloat(lr);
 
-        if (SETTINGS['optimizer'] === 'Momentum') {
+        if (this.settings['optimizer'] === 'Momentum') {
             let momentum =
-                settingsBoxDOM.children[0].children[7].children[0].children[1]
+                this.settingsBoxDOM.children[0].children[7].children[0].children[1]
                     .value;
             if (isNaN(momentum) || parseFloat(momentum) < 0)
-                return renderError('Must provide positive numeric momentum.');
-            SETTINGS['momentum'] = parseFloat(momentum);
-        } else delete SETTINGS.momentum;
+                return this.renderError('Must provide positive numeric momentum.');
+            this.settings['momentum'] = parseFloat(momentum);
+        } else delete this.settings.momentum;
 
         let epochs =
-            settingsBoxDOM.children[0].children[
-                SETTINGS['optimizer'] === 'Momentum' ? 8 : 7
+            this.settingsBoxDOM.children[0].children[
+                this.settings['optimizer'] === 'Momentum' ? 8 : 7
             ].children[0].children[1].value;
 
         if (isNaN(epochs) || parseInt(epochs) < 0)
-            return renderError(
+            return this.renderError(
                 'Must provide positive integer number of epochs.'
             );
-        SETTINGS['epochs'] = parseInt(epochs);
+        this.settings['epochs'] = parseInt(epochs);
             
-        return SETTINGS;
+        return this.settings;
     }
 }
-
-window.onload = onload => {
-    render(variableBox(VARIABLES), variableBoxDOM);
-    render(settingsBox(SETTINGS), settingsBoxDOM);
-    render(startVisualizerBox(), visualizerBoxDOM);
-    render(navbarBox(), navbarBoxDOM);
-    ON_LOAD();
-};
 
 export default new UI();
