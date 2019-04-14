@@ -5,8 +5,8 @@ const baseLayout = {
     margin: {
         l: 0,
         r: 0,
-        b: 0,
-        t: 0
+        b: 20,
+        t: 90
     }
 };
 
