@@ -48,26 +48,29 @@ class Plot {
          * @param data 2D array of heights.
          * @param path A list of (x, y) coordinates.
          */
-        const context = [
-            {
+        const context = [];
+
+        if (path) {
+            context.push({
                 type: 'scatter3d',
                 mode: 'lines',
                 x: path.map(p => p[0]),
                 y: path.map(p => p[1]),
-                z: path.map(p => this.getHeight(data, p[0], p[1]) + .01),
+                z: path.map(p => this.getHeight(data, p[0], p[1]) + 0.01),
                 opacity: 1,
                 line: {
                     color: 'black',
                     width: 6
                 }
-            },
-            {
-                z: data,
-                type: 'surface',
-                colorscale: 'YIGnBu',
-                showscale: false
-            }
-        ];
+            });
+        }
+
+        context.push({
+            z: data,
+            type: 'surface',
+            colorscale: 'YIGnBu',
+            showscale: false
+        });
 
         Plotly.newPlot(this.div, context, this.layout);
     }
