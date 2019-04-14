@@ -261,16 +261,18 @@ const typeChangeVariable = variable => {
     render(variableBox(VARIABLES), variableBoxDOM);
 };
 
-const renderError = errorMessage => {
+const renderMessage = (type, message) => {
     MESSAGES.push({
-        type: 'error',
-        content: errorMessage
+        type: type,
+        content: message
     });
 
     render(messageBox(MESSAGES), messageBoxDOM);
 
     return null;
 };
+
+const renderError = errorMessage => renderMessage('error', errorMessage);
 
 const deleteMessage = message => {
     MESSAGES.splice(MESSAGES.indexOf(message), 1);
@@ -367,55 +369,48 @@ const newVariable = variable => {
     render(variableBox(VARIABLES), variableBoxDOM);
 };
 
-const renderMessage = (type, message) => {
-    MESSAGES.push({
-        type: type,
-        content: message
-    });
-
-    render(messageBox(MESSAGES), messageBoxDOM);
-
-    return null;
-};
-
 class UI {
-    setOnloadHandler = handler => {
+    setOnloadHandler(handler) {
         ON_LOAD = handler;
-    };
+    }
 
-    renderError = errorMessage => renderMessage('error', errorMessage);
+    renderError(errorMessage) {
+        return renderMessage('error', errorMessage);
+    }
 
-    renderSuccess = successMessage => renderMessage('success', successMessage);
+    renderSuccess(successMessage) {
+        return renderMessage('success', successMessage);
+    }
 
-    setVisualizerStartHandler = handler => {
+    setVisualizerStartHandler(handler) {
         ON_VISUALIZER_CLICK = handler;
-    };
+    }
 
-    setVisualizerCancelHandler = handler => {
+    setVisualizerCancelHandler(handler) {
         ON_VISUALIZER_CANCEL = handler;
-    };
+    }
 
-    setVisualizerStart = () => {
-        render(startVisualizerBox(), visualizerBoxDOM);
-    };
+    setVisualizerStart() {
+        return render(startVisualizerBox(), visualizerBoxDOM);
+    }
 
-    setVisualizerLoading = (progress, message) => {
-        render(loadVisualizerBox(progress, message), visualizerBoxDOM);
-    };
+    setVisualizerLoading(progress, message) {
+        return render(loadVisualizerBox(progress, message), visualizerBoxDOM);
+    }
 
-    setVisualizerPlotSurface = data => {
+    setVisualizerPlotSurface(data) {
         render(plotVisualizerBox(), visualizerBoxDOM);
         let plot = new Plot('plotBox', 'Loss Surface');
         plot.surface(data);
-    };
+    }
 
-    setVisualizerPlotLine = (x, y) => {
+    setVisualizerPlotLine(x, y) {
         render(plotVisualizerBox(), visualizerBoxDOM);
         let plot = new Plot('plotBox', 'Loss Curve');
         plot.line(x, y);
-    };
+    }
 
-    getVariables = () => {
+    getVariables() {
         for (let el of variableBoxDOM.children) {
             if (!el.variable) continue;
 
@@ -488,9 +483,9 @@ class UI {
         }
 
         return VARIABLES;
-    };
+    }
 
-    getSettings = () => {
+    getSettings() {
         let points =
             settingsBoxDOM.children[0].children[1].children[0].children[1]
                 .value;
@@ -533,7 +528,7 @@ class UI {
         SETTINGS['steps'] = parseInt(steps);
 
         return SETTINGS;
-    };
+    }
 }
 
 window.onload = onload => {

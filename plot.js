@@ -26,7 +26,7 @@ class Plot {
         }
     }
 
-    line = (x, y) => {
+    line(x, y) {
         /**
          * @param x List of x values.
          * @param y List of y values.
@@ -40,9 +40,9 @@ class Plot {
         ];
 
         Plotly.newPlot(this.div, context, this.layout);
-    };
+    }
 
-    surface = data => {
+    surface(data) {
         /**
          * @param data 2D array of heights.
          */
@@ -54,7 +54,7 @@ class Plot {
         ];
 
         Plotly.newPlot(this.div, context, this.layout);
-    };
+    }
 }
 
 export default Plot;
