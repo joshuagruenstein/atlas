@@ -198,10 +198,10 @@ class UI {
         return render(loadVisualizerBox(progress, message, this.onCancel.bind(this)), this.visualizerBoxDOM);
     }
 
-    setVisualizerPlotSurface(data) {
+    setVisualizerPlotSurface(data, path=null) {
         render(plotVisualizerBox(this.onCancel.bind(this)), this.visualizerBoxDOM);
         let plot = new Plot('plotBox', 'Loss Surface');
-        plot.surface(data);
+        plot.surface(data, path);
     }
 
     setVisualizerPlotLine(x, y) {
