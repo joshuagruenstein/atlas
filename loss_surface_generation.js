@@ -12,10 +12,10 @@ var cancel = false;
  * Generates a loss surface for our {model} on some {data} with {labels}.
  * First trains the model, then generates random vectors, then computes the weight surface.
  */
-async function generateLossSurface(model, data, labels, runPCA, showPath, epochs = 5, granularity = 10, learningRate = .01) {
+async function generateLossSurface(model, data, labels, runPCA, showPath, granularity, learningParameters) {
     running = true;
 
-    const trainData = await trainModel(model, data, labels, epochs, runPCA, showPath, learningRate);
+    const trainData = await trainModel(model, data, labels, runPCA, showPath, learningParameters);
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
     const weightVectorA = runPCA ? trainData["pca"][0] : await randomNormalizedWeightVector(model);
@@ -136,7 +136,7 @@ async function evaluateLossOnData(model, data, labels) {
 /**
  * Train the model.
  */
-async function trainModel(model, data, labels, epochs = 5, runPCA = false, showPath = false, learningRate = .01) {
+async function trainModel(model, data, labels, runPCA = false, showPath = false, learningParameters) {
     const weightVectors = [];
 
     const onBatchEnd = (batch, logs) => {
@@ -145,7 +145,7 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = false, showP
     };
 
     const onEpochEnd = async (epoch) => {
-        await reportLossSurfaceGenerationProgress("Training model", epoch / epochs);
+        await reportLossSurfaceGenerationProgress("Training model", epoch / learningParameters["epochs"]);
         if (runPCA || showPath) {
             weightVectors.push(await modelWeightsToWeightVector(model));
         }
@@ -154,9 +154,9 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = false, showP
     // TODO: Training
 
     await model.fit(data, labels, {
-        epochs,
-        batchSize: 32,
-        callbacks: { onBatchEnd, onEpochEnd }
+      epochs: learningParameters["epochs"],
+      batchSize: 32,
+      callbacks: { onBatchEnd, onEpochEnd }
     });
 
     if (runPCA) {
@@ -226,9 +226,8 @@ async function test() {
       labels,
       SETTINGS["usePCA"],
       SETTINGS["showPath"],
-      SETTINGS["epochs"],
       SETTINGS["granularity"],
-      SETTINGS["learningRate"]
+      SETTINGS
     );
     
     await reportLossSurfaceGenerationProgress("All done! :) ", 1);
