@@ -3,6 +3,29 @@
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
 
 /**
+ * Generates a loss surface for our {model} on some {data} with {labels}.
+ * First trains the model, then generates random vectors, then computes the weight surface.
+ */
+async function generateLossSurface(model, data, labels, granularity=10) {
+    await trainModel(model, data, labels);
+
+    const optimalWeightVector = await modelWeightsToWeightVector(model);
+    const normalizedRandomWeightVectorA = await randomNormalizedWeightVector(model);
+    const normalizedRandomWeightVectorB = await randomNormalizedWeightVector(model);
+
+    const lossSurface = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedRandomWeightVectorA, normalizedRandomWeightVectorB, granularity);
+
+    return lossSurface;
+}
+
+/**
+ * Report progress.
+ */
+function reportLossSurfaceGenerationProgress(message, percent) {
+    console.log("reportLossSurfaceGenerationProgress", message, percent);
+}
+
+/**
  * Convert a model into a column vector with all of its weights
  */
 async function modelWeightsToWeightVector(model){
@@ -51,50 +74,86 @@ async function loadModelWeighWeightVector(model, weightVector) {
 }
 
 /**
- * Generate a loss surface for a {model} on some {data}, centered around our {optimalWeightVector}, using the directions of
+ * Compute a loss surface for a {model} on some {data}, centered around our {optimalWeightVector}, using the directions of
  * {randomWeightVectorA} and {randomWeightVectorB}.
  */
-async function generateLossSurface(model, data, optimalWeightVector, randomWeightVectorA, randomWeightVectorB, granularity = 10) {
+async function computeLossSurface(model, data, labels, optimalWeightVector, randomWeightVectorA, randomWeightVectorB, granularity = 10) {
     const stepSize = 1/granularity;
 
+    let evalIndex = 0;
+    
     const losses = [];
-    for (const a = -1; a <= 1; a += stepSize) {
+    for (let a = -1; a <= 1; a += stepSize) {
         const rowLosses = [];
-        losses.append(rowLosses);
+        losses.push(rowLosses);
 
-        for (const b = -1; b <= 1; b += stepSize) {
-            Console.assert(a >= -1 && a <= 1 && b >= -1 && b <= 1);
+        for (let b = -1; b <= 1; b += stepSize) {
+            console.assert(a >= -1 && a <= 1 && b >= -1 && b <= 1);
+            
+            reportLossSurfaceGenerationProgress("Generating Loss Surface", evalIndex / Math.pow((granularity * 2 + 1), 2));
 
             const weightVector = optimalWeightVector.add(randomWeightVectorA.mul(a).add(randomWeightVectorB.mul(b)));
             loadModelWeighWeightVector(model, weightVector);
 
-            const loss = evaluateLossOnData(model, data);
+            const loss = await evaluateLossOnData(model, data, labels);
 
-            rowLosses.append(loss);
+            rowLosses.push(loss);
+            evalIndex += 1;
         }
     }
+
+    return losses;
 }
 
 /**
- * 
+ * Evaluate the model's loss.
  */
-async function evaluateLossOnData(model, data){
+async function evaluateLossOnData(model, data, labels){
+    const t = model.evaluate(data, labels)[0];
+    return (await t.data())[0];
+}
+
+/**
+ * Train the model.
+ */
+async function trainModel(model, data, labels, epochs = 5){
+    console.log("train model");
     
+    const onBatchEnd = (batch, logs) => {
+        // TODO: Wire this up to UI
+        console.log('Accuracy', logs.acc);
+    };
+
+    const onEpochEnd = (epoch, logs) => {
+        reportLossSurfaceGenerationProgress("Training model", epoch / epochs);
+    }
+
+    await model.fit(data, labels, {
+        epochs,
+        batchSize: 32,
+        callbacks: { onBatchEnd, onEpochEnd }
+    });
 }
 
-async function test(model) {
-    const optimalWeightVector = await modelWeightsToWeightVector(model);
-    const normalizedRandomWeightVector = await randomNormalizedWeightVector(model);
-    console.log(optimalWeightVector, normalizedRandomWeightVector);
+/**
+ * Tester.
+ */
+function test(){
+    const model = tf.sequential({
+        layers: [
+            tf.layers.dense({ inputShape: [784], units: 32, activation: 'relu' }),
+            tf.layers.dense({ units: 10, activation: 'softmax' }),
+        ]
+    });
+    model.compile({
+        optimizer: 'sgd',
+        loss: 'categoricalCrossentropy',
+        metrics: ['accuracy']
+    });
+    const data = tf.randomNormal([100, 784]);
+    const labels = tf.randomUniform([100, 10]);
 
-    loadModelWeighWeightVector(model, normalizedRandomWeightVector);
+    generateLossSurface(model, data, labels);
 }
 
-
-const model = tf.sequential({
-    layers: [
-        tf.layers.dense({ inputShape: [784], units: 32, activation: 'relu' }),
-        tf.layers.dense({ units: 10, activation: 'softmax' }),
-    ]
-});
-test(model);
+test();
