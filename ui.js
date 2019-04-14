@@ -5,6 +5,8 @@ const variableBoxDOM = document.getElementById('variableBox');
 const messageBoxDOM = document.getElementById('messageBox');
 const settingsBoxDOM = document.getElementById('settingsBox');
 const visualizerBoxDOM = document.getElementById('visualizerBox');
+const modalBoxDOM = document.getElementById('modalBox');
+const navbarBoxDOM = document.getElementById('navbarBox');
 
 const VARIABLES = [];
 const MESSAGES = [];
@@ -13,6 +15,19 @@ const SETTINGS = {};
 let ON_VISUALIZER_CLICK;
 let ON_VISUALIZER_CANCEL;
 let ON_LOAD;
+
+const navbarBox = () => html`
+    <section class="navbar-section">
+        <a class="btn btn-action" href="#sidebar"> <i class="icon icon-menu"></i></a>
+    </section>
+    <section class="navbar-center">
+        <span class="text-primary">Atlas</span>
+    </section>
+    <section class="navbar-section">
+        <button class="btn mr-2 btn-action" @click=${showModal}><i class="icon icon-emoji"></i></button>
+        <button class="btn ml-2 btn-action"><i class="icon icon-share"></i></button>
+    </section>
+`
 
 const startVisualizerBox = () => html`
     <div class="empty panel">
@@ -51,6 +66,36 @@ const loadVisualizerBox = (progress, message) => html`
         </div>
     </div>
 `;
+
+const modalBox = active => html`
+    <div class="modal ${active ? 'active' : ''}" id="modal-id">
+        <a href="#close" @click=${closeModal} class="modal-overlay" aria-label="Close"></a>
+        <div class="modal-container">
+            <div class="modal-header">
+                <a href="#close" @click=${closeModal} class="btn btn-clear float-right" aria-label="Close"></a>
+                <div class="modal-title h5">About Atlas</div>
+            </div>
+
+            <div class="modal-body">
+                <div class="content">
+                    Atlas is an optimization loss surface visualizer built as a final project for <a href='http://math.mit.edu/classes/18.065/2019SP/'>18.065: Matrix Methods In Data Analysis, Signal Processing, And Machine Learning</a>, taught by <a href='http://www-math.mit.edu/~gs/'>Professor Gill Strang</a>.
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                Created by <a href='https://github.com/mfranzs'>Martin Schneider</a>, <a href='https://github.com/scherna'>Sammy Cherna</a>, <a href='https://github.com/lhirschfeld'>Lior Hirschfeld</a>, and <a href='https://github.com/joshuagruenstein'>Josh Gruenstein</a>.
+            </div>
+        </div>
+    </div>
+`
+
+const closeModal = () => {
+    render(modalBox(false), modalBoxDOM);
+}
+
+const showModal = () => {
+    render(modalBox(true), modalBoxDOM);
+}
 
 const variable = variable => html`
     <ul
@@ -182,8 +227,8 @@ const settingsBox = settings => html`
 
         <li class="menu-item">
             <div class="input-group">
-                <span class="input-group-addon">Points</span>
-                <input class="form-input" type="number" size="2" value="1000" />
+                <span class="input-group-addon">Granularity</span>
+                <input class="form-input" type="number" size="2" value="10" />
             </div>
         </li>
 
@@ -192,6 +237,14 @@ const settingsBox = settings => html`
                 <input type="checkbox" />
 
                 <i class="form-icon"></i> Show optimizer path
+            </label>
+        </li>
+
+        <li class="menu-item">
+            <label class="form-switch">
+                <input type="checkbox" />
+
+                <i class="form-icon"></i> Use PCA directions
             </label>
         </li>
 
@@ -238,7 +291,7 @@ const settingsBox = settings => html`
 
         <li class="menu-item pt-2 pb-2">
             <div class="input-group">
-                <span class="input-group-addon ">Steps</span>
+                <span class="input-group-addon ">Epochs</span>
                 <input class="form-input" type="number" size="2" value="50" />
             </div>
         </li>
@@ -247,7 +300,7 @@ const settingsBox = settings => html`
 
 const changeOptimizer = () => {
     SETTINGS['optimizer'] =
-        settingsBoxDOM.children[0].children[4].children[0].value;
+        settingsBoxDOM.children[0].children[5].children[0].value;
     render(settingsBox(SETTINGS), settingsBoxDOM);
 };
 
@@ -421,6 +474,9 @@ class UI {
                 return renderError('Variable names must be letters only.');
 
             el.variable['name'] = name;
+            el.variable['trainable'] = el.getElementsByClassName(
+                'form-switch'
+            )[0].children[0].checked;
 
             if (el.variable.type === 'Scalar') {
                 let value = el.children[1].children[0].children[1].value;
@@ -439,14 +495,18 @@ class UI {
                     );
                 else el.variable['length'] = parseInt(length);
 
-                if (!el.variable['data'] || !Array.isArray(el.variable['data']))
-                    return renderError('Must upload initial CSV for vectors.');
-                else if (el.variable.data.length !== el.variable.length)
+                if (!el.variable.trainable && (!el.variable['data'] || !Array.isArray(el.variable['data'])))
+                    return renderError("Must provide CSV data for non-trainable vectors.");
+
+                else if (!el.variable['data']) el.variable['data'] = null;
+
+                else if (!Array.isArray(el.variable['data']) || el.variable.data.length !== el.variable.length)
                     return renderError(
                         `Vector ${name} has declared length ${length} but CSV length ${
                             el.variable.data.length
                         }.`
                     );
+
             } else {
                 let length_i = el.children[1].children[0].children[1].value;
                 let length_j = el.children[1].children[0].children[2].value;
@@ -461,9 +521,11 @@ class UI {
                         parseInt(length_j)
                     ];
 
-                if (!el.variable['data'] || !Array.isArray(el.variable['data']))
-                    return renderError('Must upload initial CSV for matrices.');
+                if (!el.variable.trainable && (!el.variable['data'] || !Array.isArray(el.variable['data'])))
+                    return renderError('Must upload initial CSV for non-trainable matrices.');
+                else if (!el.variable['data']) el.variable['data'] = null;
                 else if (
+                    !Array.isArray(el.variable['data']) ||
                     el.variable.data.length !== el.variable.shape[0] ||
                     el.variable.data[0].length !== el.variable.shape[1]
                 )
@@ -477,30 +539,30 @@ class UI {
                     );
             }
 
-            el.variable['trainable'] = el.getElementsByClassName(
-                'form-switch'
-            )[0].children[0].checked;
         }
 
         return VARIABLES;
     }
 
     getSettings() {
-        let points =
+        let granularity =
             settingsBoxDOM.children[0].children[1].children[0].children[1]
                 .value;
-        if (isNaN(points) || parseInt(points) < 0)
+        if (isNaN(granularity) || parseInt(granularity) < 0)
             return renderError(
-                'Must provide positive integer number of points.'
+                'Must provide positive integer granularity.'
             );
 
-        SETTINGS['points'] = parseInt(points);
+        SETTINGS['granularity'] = parseInt(granularity);
 
         SETTINGS['showPath'] =
             settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
 
+        SETTINGS['usePCA'] =
+            settingsBoxDOM.children[0].children[3].children[0].children[0].checked;
+
         let lr =
-            settingsBoxDOM.children[0].children[5].children[0].children[1]
+            settingsBoxDOM.children[0].children[6].children[0].children[1]
                 .value;
         if (isNaN(lr) || parseFloat(lr) < 0)
             return renderError('Must provide positive numeric learning rate.');
@@ -509,24 +571,24 @@ class UI {
 
         if (SETTINGS['optimizer'] === 'Momentum') {
             let momentum =
-                settingsBoxDOM.children[0].children[6].children[0].children[1]
+                settingsBoxDOM.children[0].children[7].children[0].children[1]
                     .value;
             if (isNaN(momentum) || parseFloat(momentum) < 0)
                 return renderError('Must provide positive numeric momentum.');
             SETTINGS['momentum'] = parseFloat(momentum);
         } else delete SETTINGS.momentum;
 
-        let steps =
+        let epochs =
             settingsBoxDOM.children[0].children[
-                SETTINGS['optimizer'] === 'Momentum' ? 6 : 5
+                SETTINGS['optimizer'] === 'Momentum' ? 8 : 7
             ].children[0].children[1].value;
 
-        if (isNaN(steps) || parseInt(steps) < 0)
+        if (isNaN(epochs) || parseInt(epochs) < 0)
             return renderError(
-                'Must provide positive integer number of steps.'
+                'Must provide positive integer number of epochs.'
             );
-        SETTINGS['steps'] = parseInt(steps);
-
+        SETTINGS['epochs'] = parseInt(epochs);
+            
         return SETTINGS;
     }
 }
@@ -535,6 +597,7 @@ window.onload = onload => {
     render(variableBox(VARIABLES), variableBoxDOM);
     render(settingsBox(SETTINGS), settingsBoxDOM);
     render(startVisualizerBox(), visualizerBoxDOM);
+    render(navbarBox(), navbarBoxDOM);
     ON_LOAD();
 };
 

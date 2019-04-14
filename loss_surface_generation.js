@@ -5,12 +5,17 @@ console.log(UI);
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
 
+var running = false;
+var cancel = false;
+
 /**
  * Generates a loss surface for our {model} on some {data} with {labels}.
  * First trains the model, then generates random vectors, then computes the weight surface.
  */
-async function generateLossSurface(model, data, labels, runPCA, epochs = 5, granularity = 10) {
-    await trainModel(model, data, labels, epochs, runPCA);
+async function generateLossSurface(model, data, labels, runPCA, showPath, epochs = 5, granularity = 10, learningRate = .01) {
+    running = true;
+
+    await trainModel(model, data, labels, epochs, runPCA, showPath, learningRate);
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
     const normalizedRandomWeightVectorA = await randomNormalizedWeightVector(model);
@@ -18,6 +23,7 @@ async function generateLossSurface(model, data, labels, runPCA, epochs = 5, gran
 
     const lossSurface = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedRandomWeightVectorA, normalizedRandomWeightVectorB, granularity);
 
+    running = false;
     return lossSurface;
 }
 
@@ -85,7 +91,7 @@ async function loadModelWeighWeightVector(model, weightVector) {
  * {randomWeightVectorA} and {randomWeightVectorB}.
  */
 async function computeLossSurface(model, data, labels, optimalWeightVector, randomWeightVectorA, randomWeightVectorB, granularity = 10) {
-    const stepSize = 1 / granularity;
+    const stepSize = 2 / granularity;
 
     let evalIndex = 0;
 
@@ -97,7 +103,7 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
         for (let b = -1; b <= 1; b += stepSize) {
             console.assert(a >= -1 && a <= 1 && b >= -1 && b <= 1);
 
-            await reportLossSurfaceGenerationProgress("Generating Loss Surface", evalIndex / Math.pow((granularity * 2 + 1), 2));
+            await reportLossSurfaceGenerationProgress("Generating Loss Surface", evalIndex / Math.pow((granularity + 1), 2));
 
             const weightVector = optimalWeightVector.add(randomWeightVectorA.mul(a).add(randomWeightVectorB.mul(b)));
             loadModelWeighWeightVector(model, weightVector);
@@ -106,6 +112,11 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
 
             rowLosses.push(loss);
             evalIndex += 1;
+
+            if (cancel) {
+                cancelSucceeded();
+                return;
+            }
         }
     }
 
@@ -123,7 +134,7 @@ async function evaluateLossOnData(model, data, labels) {
 /**
  * Train the model.
  */
-async function trainModel(model, data, labels, epochs = 5, runPCA = true) {
+async function trainModel(model, data, labels, epochs = 5, runPCA = false, showPath = false, learningRate = .01) {
     const weightVectors = [];
 
     const onBatchEnd = (batch, logs) => {
@@ -133,10 +144,12 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = true) {
 
     const onEpochEnd = async (epoch) => {
         await reportLossSurfaceGenerationProgress("Training model", epoch / epochs);
-        if (runPCA) {
+        if (runPCA || showPath) {
             weightVectors.push(await (await modelWeightsToWeightVector(model)).data());
         }
     }
+
+    // TODO: Training
 
     await model.fit(data, labels, {
         epochs,
@@ -153,9 +166,14 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = true) {
         const vectorB = pca[1].vector;
         await reportLossSurfaceGenerationProgress("Running PCA", 1);
 
-        return [vectorA, vectorB];
+        return {
+            "pca": [vectorA, vectorB],
+            "weightVectors": weightVectors
+        };
     }else {
-        // Return nothing
+        return {
+          "weightVectors": weightVectors
+        };
     }
 }
 
@@ -163,6 +181,12 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = true) {
  * Tester.
  */
 async function test() {
+    const SETTINGS = UI.getSettings();
+    if (!SETTINGS) {
+        alert("Invalid settings!");
+        return;
+    }
+
     const model = tf.sequential({
         layers: [
             //784
@@ -178,11 +202,24 @@ async function test() {
     const data = tf.randomNormal([100, 78]);
     const labels = tf.randomUniform([100, 10]);
 
-    const lossSurface = await generateLossSurface(model, data, labels, false);
+    const lossSurface = await generateLossSurface(
+      model,
+      data,
+      labels,
+      SETTINGS["usePCA"],
+      SETTINGS["showPath"],
+      SETTINGS["epochs"],
+      SETTINGS["granularity"],
+      SETTINGS["learningRate"]
+    );
     
-   await reportLossSurfaceGenerationProgress("All done! :) ", 1);
+    await reportLossSurfaceGenerationProgress("All done! :) ", 1);
 
-    UI.setVisualizerPlotSurface(lossSurface);
+    if (lossSurface) {
+        UI.setVisualizerPlotSurface(lossSurface);
+    } else {
+        UI.setVisualizerStart();
+    }
 }
 
 /**
@@ -194,11 +231,23 @@ function delay(t, v) {
     });
 }
 
+/**
+ * Hacky cancel mechanism.
+ */
+function cancelExecution(){
+    cancel = true;
+}
+
+function cancelSucceeded(){
+    cancel = false;
+}
+
 UI.setVisualizerStartHandler(() => {
     test();
 });
 
 
 UI.setVisualizerCancelHandler(() => {
-    // cancel();
+    if (running) cancelExecution();
+    else UI.setVisualizerStart();
 });
