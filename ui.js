@@ -191,21 +191,21 @@ class UI {
     }
 
     setVisualizerStart() {
-        return render(startVisualizerBox(), this.visualizerBoxDOM);
+        return render(startVisualizerBox(this.onStart.bind(this)), this.visualizerBoxDOM);
     }
 
     setVisualizerLoading(progress, message) {
-        return render(loadVisualizerBox(progress, message, this.onCancel), this.visualizerBoxDOM);
+        return render(loadVisualizerBox(progress, message, this.onCancel.bind(this)), this.visualizerBoxDOM);
     }
 
     setVisualizerPlotSurface(data) {
-        render(plotVisualizerBox(this.onCancel), this.visualizerBoxDOM);
+        render(plotVisualizerBox(this.onCancel.bind(this)), this.visualizerBoxDOM);
         let plot = new Plot('plotBox', 'Loss Surface');
         plot.surface(data);
     }
 
     setVisualizerPlotLine(x, y) {
-        render(plotVisualizerBox(this.onCancel), this.visualizerBoxDOM);
+        render(plotVisualizerBox(this.onCancel.bind(this)), this.visualizerBoxDOM);
         let plot = new Plot('plotBox', 'Loss Curve');
         plot.line(x, y);
     }
