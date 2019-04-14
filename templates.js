@@ -1,6 +1,6 @@
 import { html } from 'https://unpkg.com/lit-html?module';
 
-const navbarBox = showModal => html`
+export const navbarBox = showModal => html`
     <section class="navbar-section">
         <a class="btn btn-action" href="#sidebar">
             <i class="icon icon-menu"></i
@@ -19,7 +19,7 @@ const navbarBox = showModal => html`
     </section>
 `;
 
-const startVisualizerBox = visualizerClick => html`
+export const startVisualizerBox = visualizerClick => html`
     <div class="empty panel">
         <p class="empty-title h5">The loss surface has not been generated.</p>
         <p class="empty-subtitle">
@@ -34,7 +34,7 @@ const startVisualizerBox = visualizerClick => html`
     </div>
 `;
 
-const plotVisualizerBox = visualizerCancel => html`
+export const plotVisualizerBox = visualizerCancel => html`
     <div class="panel">
         <div id="plotBox"></div>
         <button class="btn btn-error m-2" @click=${visualizerCancel}>
@@ -43,7 +43,7 @@ const plotVisualizerBox = visualizerCancel => html`
     </div>
 `;
 
-const loadVisualizerBox = (progress, message, onCancel) => html`
+export const loadVisualizerBox = (progress, message, onCancel) => html`
     <div class="empty panel">
         <p class="empty-title h5">The loss surface is being generated.</p>
         <p class="empty-subtitle" style="width:100%">
@@ -57,7 +57,7 @@ const loadVisualizerBox = (progress, message, onCancel) => html`
     </div>
 `;
 
-const modalBox = (active, closeModal) => html`
+export const modalBox = (active, closeModal) => html`
     <div class="modal ${active ? 'active' : ''}" id="modal-id">
         <a
             href="#close"
@@ -103,7 +103,7 @@ const modalBox = (active, closeModal) => html`
     </div>
 `;
 
-const variable = (
+export const variable = (
     variable,
     typeChangeVariable,
     csvVariable,
@@ -206,7 +206,7 @@ const variable = (
     </ul>
 `;
 
-const message = (message, deleteMessage) => html`
+export const message = (message, deleteMessage) => html`
     <div class="toast toast-${message.type} mt-2">
         <button
             class="btn btn-clear float-right"
@@ -216,7 +216,7 @@ const message = (message, deleteMessage) => html`
     </div>
 `;
 
-const variableBox = (
+export const variableBox = (
     variables,
     typeChangeVariable,
     csvVariable,
@@ -236,11 +236,11 @@ const variableBox = (
     </ul>
 `;
 
-const messageBox = (messages, deleteMessage) => html`
+export const messageBox = (messages, deleteMessage) => html`
     ${messages.map(m => message(m, deleteMessage))}
 `;
 
-const settingsBox = (settings, changeOptimizer) => html`
+export const settingsBox = (settings, changeOptimizer) => html`
     <ul class="menu">
         <li class="divider" data-content="SURFACE"></li>
 
@@ -316,14 +316,3 @@ const settingsBox = (settings, changeOptimizer) => html`
         </li>
     </ul>
 `;
-
-export {
-    navbarBox,
-    startVisualizerBox,
-    plotVisualizerBox,
-    loadVisualizerBox,
-    modalBox,
-    variableBox,
-    messageBox,
-    settingsBox
-};
