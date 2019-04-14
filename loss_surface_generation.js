@@ -6,12 +6,12 @@
  * Generates a loss surface for our {model} on some {data} with {labels}.
  * First trains the model, then generates random vectors, then computes the weight surface.
  */
-async function generateLossSurface(model, data, labels, granularity = 10, runPCA = true) {
-    const pcaVectors = await trainModel(model, data, labels, runPCA);
+async function generateLossSurface(model, data, labels, granularity = 10) {
+    await trainModel(model, data, labels);
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
-    const normalizedRandomWeightVectorA = runPCA ? pcaVectors[0] : await randomNormalizedWeightVector(model);
-    const normalizedRandomWeightVectorB = runPCA ? pcaVectors[1] : await randomNormalizedWeightVector(model);
+    const normalizedRandomWeightVectorA = await randomNormalizedWeightVector(model);
+    const normalizedRandomWeightVectorB = await randomNormalizedWeightVector(model);
 
     const lossSurface = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedRandomWeightVectorA, normalizedRandomWeightVectorB, granularity);
 
@@ -22,9 +22,10 @@ async function generateLossSurface(model, data, labels, granularity = 10, runPCA
  * Report progress.
  */
 async function reportLossSurfaceGenerationProgress(message, percent) {
-    console.log("reportLossSurfaceGenerationProgress", message, percent);
-    await delay(1); // Delay 1 ms so page has time to re-render
+  console.log("reportLossSurfaceGenerationProgress", message, percent);
+  await delay(1); // Delay 1 ms so page has time to re-render
 }
+
 
 /**
  * Convert a model into a column vector with all of its weights
@@ -141,24 +142,17 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = true) {
     });
 
     if (runPCA) {
-        console.log(weightVectors);
-        // const transpose = (array) => array[0].map((col, i) => array.map(row => row[i]));
-        // const pca = new ML.PCA(transpose(weightVectors));
+        await reportLossSurfaceGenerationProgress("Running PCA (this may take a while)", 0);
 
-        await reportLossSurfaceGenerationProgress("Running PCA", 0);
-
-        // https://www.npmjs.com/package/pca-js
         const pca = new PCA.getEigenVectors(weightVectors);
 
+        const vectorA = pca[0].vector;
+        const vectorB = pca[1].vector;
         await reportLossSurfaceGenerationProgress("Running PCA", 1);
 
-        console.log(pca);
-        console.log(pca.filter(x => x.eigenvalue > 0));
-
-        const vectorA = pca.U[0][0];
-        const vectorB = pca.U[0][1];
-
         return [vectorA, vectorB];
+    }else {
+        // Return nothing
     }
 }
 
