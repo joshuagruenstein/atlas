@@ -9,8 +9,8 @@ console.log(UI);
  * Generates a loss surface for our {model} on some {data} with {labels}.
  * First trains the model, then generates random vectors, then computes the weight surface.
  */
-async function generateLossSurface(model, data, labels, granularity = 10) {
-    await trainModel(model, data, labels);
+async function generateLossSurface(model, data, labels, runPCA, epochs = 5, granularity = 10) {
+    await trainModel(model, data, labels, epochs, runPCA);
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
     const normalizedRandomWeightVectorA = await randomNormalizedWeightVector(model);
@@ -24,10 +24,11 @@ async function generateLossSurface(model, data, labels, granularity = 10) {
 /**
  * Report progress.
  */
-async function reportLossSurfaceGenerationProgress(message, percent) {
+async function reportLossSurfaceGenerationProgress(message, percent, waitForUIUpdate=false) {
   console.log("reportLossSurfaceGenerationProgress", message, percent);
   UI.setVisualizerLoading(percent * 100, message);
-  await delay(1); // Delay 1 ms so page has time to re-render
+
+  if(waitForUIUpdate) await delay(100); // Delay 1 ms so page has time to re-render
 }
 
 
@@ -123,8 +124,6 @@ async function evaluateLossOnData(model, data, labels) {
  * Train the model.
  */
 async function trainModel(model, data, labels, epochs = 5, runPCA = true) {
-    console.log("train model");
-
     const weightVectors = [];
 
     const onBatchEnd = (batch, logs) => {
@@ -146,7 +145,7 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = true) {
     });
 
     if (runPCA) {
-        await reportLossSurfaceGenerationProgress("Running PCA (this may take a while)", 0);
+        await reportLossSurfaceGenerationProgress("Running PCA (this may take a while)", 0, true);
 
         const pca = new PCA.getEigenVectors(weightVectors);
 
@@ -163,7 +162,7 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = true) {
 /**
  * Tester.
  */
-function test() {
+async function test() {
     const model = tf.sequential({
         layers: [
             //784
@@ -179,7 +178,9 @@ function test() {
     const data = tf.randomNormal([100, 78]);
     const labels = tf.randomUniform([100, 10]);
 
-    const lossSurface = generateLossSurface(model, data, labels);
+    const lossSurface = await generateLossSurface(model, data, labels, false);
+    
+   await reportLossSurfaceGenerationProgress("All done! :) ", 1);
 
     UI.setVisualizerPlotSurface(lossSurface);
 }
@@ -198,6 +199,6 @@ UI.setVisualizerStartHandler(() => {
 });
 
 
-UI.setVisualizerStartHandler(() => {
-    cancel();
+UI.setVisualizerCancelHandler(() => {
+    // cancel();
 });
