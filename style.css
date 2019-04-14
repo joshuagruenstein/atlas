@@ -1,18 +1,22 @@
 body, html, #main {
-	height:100%;
+    height:100%;
 }
 
 #sidebar {
-	overflow-y:scroll;
+    overflow-y:scroll;
 }
 
 #expressionRendering {
-	font-size: 1.5em !important;
-	margin:1em;
+    font-size: 1.5em !important;
+    margin:1em;
 }
 
 @media only screen and (min-width : 960px) {
-  a[href='#sidebar'] {
-    display: none;
-  }
+    a[href='#sidebar'] {
+        display: none;
+    }
+}
+
+#plotBox {
+    margin: 0 auto;
 }

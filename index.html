@@ -6,6 +6,9 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pca-js@1.0.0/pca.min.js"></script>
+
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
@@ -15,6 +18,7 @@
 <body>
 
 <input style="display:none" id="filePicker" type="file" />
+<div id="modalBox"></div>
 
 <div class="off-canvas off-canvas-sidebar-show" id="main">
     
@@ -32,21 +36,9 @@
 
     <a class="off-canvas-overlay" href="#close"></a>
 
-    <div class="off-canvas-content pl-2">
+    <div class="off-canvas-content pl-2" style="overflow-y:scroll">
 
-        <header class="navbar p-2">
-          <section class="navbar-section">
-            <a class="btn btn-action" href="#sidebar"> <i class="icon icon-menu"></i></a>
-          </section>
-          <section class="navbar-center">
-            <span class="text-primary">Atlas</span>
-          </section>
-          <section class="navbar-section">
-             <button class="btn mr-2 btn-action"><i class="icon icon-emoji"></i></button>
-             <button class="btn ml-2 btn-action"><i class="icon icon-share"></i></button>
-          </section>
-
-        </header>
+        <header class="navbar p-2" id="navbarBox"></header>
 
         <div class="container" id="messageBox"></div>
 
@@ -58,18 +50,7 @@
                     <div class="text-center" id="expressionRendering">``</div>
                 </div>
 
-                <div class="column col-md-9">
-
-                    <div class="empty panel">
-                        <p class="empty-title h5">The loss surface has not been generated.</p>
-                        <p class="empty-subtitle">Click the button to begin visualization.  This may take some time.</p>
-
-                        <div class="empty-action">
-                            <button class="btn btn-primary">Generate loss surface</button>
-                        </div>
-                    </div>
-
-                </div>
+                <div class="column col-md-9" id="visualizerBox"></div>
 
                 <div class="column col-md-3" id='settingsBox'></div>
             </div>
@@ -81,20 +62,18 @@
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=AM_CHTML"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <script>
 window.MathJax = {
-    "fast-preview": {
-        disabled: true
-    },
     AuthorInit: function() {
         MathJax.Hub.Register.StartupHook('End', function() {
             MathJax.Hub.processSectionDelay = 0;
-            let demoSource = document.getElementById('expressionSource');
-            let demoRendering = document.getElementById('expressionRendering');
-            let math = MathJax.Hub.getAllJax('demoRendering')[0];
-            demoSource.addEventListener('input', function() {
-                MathJax.Hub.Queue(['Text', math, demoSource.value]);
+            let expressionSource = document.getElementById('expressionSource');
+            let expressionRendering = document.getElementById('expressionRendering');
+            let math = MathJax.Hub.getAllJax('expressionRendering')[0];
+            expressionSource.addEventListener('input', function() {
+                MathJax.Hub.Queue(['Text', math, expressionSource.value]);
             })
         });
 
