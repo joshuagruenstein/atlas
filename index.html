@@ -93,13 +93,26 @@ window.MathJax = {
     AuthorInit: function() {
         MathJax.Hub.Register.StartupHook('End', function() {
             MathJax.Hub.processSectionDelay = 0;
-            var demoSource = document.getElementById('expressionSource');
-            var demoRendering = document.getElementById('expressionRendering');
-            var math = MathJax.Hub.getAllJax('demoRendering')[0];
+            let demoSource = document.getElementById('expressionSource');
+            let demoRendering = document.getElementById('expressionRendering');
+            let math = MathJax.Hub.getAllJax('demoRendering')[0];
             demoSource.addEventListener('input', function() {
                 MathJax.Hub.Queue(['Text', math, demoSource.value]);
             })
-        })
+        });
+
+        MathJax.Hub.Register.StartupHook('AsciiMath Jax Ready', function () {
+            let AM = MathJax.InputJax.AsciiMath.AM;
+
+            AM.newsymbol({
+                input:'relu',
+                tag:'mi',
+                output:'relu',
+                tex:null,
+                ttype:AM.TOKEN.UNARY,
+                func:true
+            });
+        });
     }
 }
 </script>
