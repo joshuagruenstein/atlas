@@ -35,25 +35,67 @@ class Plot {
             {
                 x: x,
                 y: y,
-                type: 'scatter'
+                type: 'scatter',
+                colorscale: 'YIGnBu'
             }
         ];
 
         Plotly.newPlot(this.div, context, this.layout);
     }
 
-    surface(data) {
+    surface(data, path = null) {
         /**
          * @param data 2D array of heights.
+         * @param path A list of (x, y) coordinates.
          */
-        const context = [
-            {
-                z: data,
-                type: 'surface'
-            }
-        ];
+        const context = [];
+
+        if (path) {
+            context.push({
+                type: 'scatter3d',
+                mode: 'lines',
+                x: path.map(p => p[0]),
+                y: path.map(p => p[1]),
+                z: path.map(p => this.getHeight(data, p[0], p[1]) + 0.01),
+                opacity: 1,
+                line: {
+                    color: 'black',
+                    width: 6
+                }
+            });
+        }
+
+        context.push({
+            z: data,
+            type: 'surface',
+            colorscale: 'YIGnBu',
+            showscale: false
+        });
 
         Plotly.newPlot(this.div, context, this.layout);
+    }
+
+    getHeight(data, x, y) {
+        /**
+         * @param data 2D array of heights.
+         * @param x    x-coordinate of point of interest.
+         * @param y    y-coordinate of point of interest.
+         */
+        const xScaled = ((x + 1) * data[0].length) / 2;
+        const yScaled = ((y + 1) * data.length) / 2;
+
+        const neighborX = Math.floor(xScaled);
+        const neighborY = Math.floor(yScaled);
+        const neighborZ = data[neighborY][neighborX];
+
+        const gradX = data[neighborY][neighborX + 1] - neighborZ;
+        const gradY = data[nieghborY + 1][neighborX] - neighborZ;
+
+        return (
+            neighborZ +
+            gradX * (xScaled - neighborX) +
+            gradY * (yScaled - neighborY)
+        );
     }
 }
 

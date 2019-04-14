@@ -1,8 +1,11 @@
 import UI from "./ui.js";
 import "./loss_surface_generation.js";
+import nearly from "./nearly.js";
+
+console.log(nearly);
 
 UI.setOnloadHandler(() => {
-    UI.renderSuccess('GOOD MORNING MR VAMPIRE HOW ARE YOU TODAY EOM.');
+    UI.renderSuccess('PLS SVAE ME I AM STUCK ISN THE COMPUTER HELEPLEPLEPL.');
 });
 
 // UI.setVisualizerStartHandler(() => {
