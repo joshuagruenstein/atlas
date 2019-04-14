@@ -5,14 +5,17 @@ console.log(UI);
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
 
+var running = false;
 var cancel = false;
 
 /**
  * Generates a loss surface for our {model} on some {data} with {labels}.
  * First trains the model, then generates random vectors, then computes the weight surface.
  */
-async function generateLossSurface(model, data, labels, runPCA, epochs = 5, granularity = 10, learningRate = .01) {
-    await trainModel(model, data, labels, epochs, runPCA, learningRate);
+async function generateLossSurface(model, data, labels, runPCA, showPath, epochs = 5, granularity = 10, learningRate = .01) {
+    running = true;
+
+    await trainModel(model, data, labels, epochs, runPCA, showPath, learningRate);
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
     const normalizedRandomWeightVectorA = await randomNormalizedWeightVector(model);
@@ -20,6 +23,7 @@ async function generateLossSurface(model, data, labels, runPCA, epochs = 5, gran
 
     const lossSurface = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedRandomWeightVectorA, normalizedRandomWeightVectorB, granularity);
 
+    running = false;
     return lossSurface;
 }
 
@@ -130,8 +134,7 @@ async function evaluateLossOnData(model, data, labels) {
 /**
  * Train the model.
  */
-async function trainModel(model, data, labels, epochs = 5, runPCA = true, learningRate = .01) {
-    alert(epochs);
+async function trainModel(model, data, labels, epochs = 5, runPCA = false, showPath = false, learningRate = .01) {
     const weightVectors = [];
 
     const onBatchEnd = (batch, logs) => {
@@ -141,7 +144,7 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = true, learni
 
     const onEpochEnd = async (epoch) => {
         await reportLossSurfaceGenerationProgress("Training model", epoch / epochs);
-        if (runPCA) {
+        if (runPCA || showPath) {
             weightVectors.push(await (await modelWeightsToWeightVector(model)).data());
         }
     }
@@ -163,9 +166,14 @@ async function trainModel(model, data, labels, epochs = 5, runPCA = true, learni
         const vectorB = pca[1].vector;
         await reportLossSurfaceGenerationProgress("Running PCA", 1);
 
-        return [vectorA, vectorB];
+        return {
+            "pca": [vectorA, vectorB],
+            "weightVectors": weightVectors
+        };
     }else {
-        // Return nothing
+        return {
+          "weightVectors": weightVectors
+        };
     }
 }
 
@@ -198,6 +206,7 @@ async function test() {
       model,
       data,
       labels,
+      SETTINGS["usePCA"],
       SETTINGS["showPath"],
       SETTINGS["epochs"],
       SETTINGS["granularity"],
@@ -239,5 +248,6 @@ UI.setVisualizerStartHandler(() => {
 
 
 UI.setVisualizerCancelHandler(() => {
-    cancelExecution();
+    if (running) cancelExecution();
+    else UI.setVisualizerStart();
 });

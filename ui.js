@@ -182,7 +182,7 @@ const settingsBox = settings => html`
 
         <li class="menu-item">
             <div class="input-group">
-                <span class="input-group-addon">Points</span>
+                <span class="input-group-addon">Granularity</span>
                 <input class="form-input" type="number" size="2" value="10" />
             </div>
         </li>
@@ -192,6 +192,14 @@ const settingsBox = settings => html`
                 <input type="checkbox" />
 
                 <i class="form-icon"></i> Show optimizer path
+            </label>
+        </li>
+
+        <li class="menu-item">
+            <label class="form-switch">
+                <input type="checkbox" />
+
+                <i class="form-icon"></i> Use PCA directions
             </label>
         </li>
 
@@ -238,7 +246,7 @@ const settingsBox = settings => html`
 
         <li class="menu-item pt-2 pb-2">
             <div class="input-group">
-                <span class="input-group-addon ">Steps</span>
+                <span class="input-group-addon ">Epochs</span>
                 <input class="form-input" type="number" size="2" value="50" />
             </div>
         </li>
@@ -247,7 +255,7 @@ const settingsBox = settings => html`
 
 const changeOptimizer = () => {
     SETTINGS['optimizer'] =
-        settingsBoxDOM.children[0].children[4].children[0].value;
+        settingsBoxDOM.children[0].children[5].children[0].value;
     render(settingsBox(SETTINGS), settingsBoxDOM);
 };
 
@@ -486,21 +494,24 @@ class UI {
     }
 
     getSettings() {
-        let points =
+        let granularity =
             settingsBoxDOM.children[0].children[1].children[0].children[1]
                 .value;
-        if (isNaN(points) || parseInt(points) < 0)
+        if (isNaN(granularity) || parseInt(granularity) < 0)
             return renderError(
-                'Must provide positive integer number of points.'
+                'Must provide positive integer granularity.'
             );
 
-        SETTINGS['points'] = parseInt(points);
+        SETTINGS['granularity'] = parseInt(granularity);
 
         SETTINGS['showPath'] =
             settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
 
+        SETTINGS['usePCA'] =
+            settingsBoxDOM.children[0].children[3].children[0].children[0].checked;
+
         let lr =
-            settingsBoxDOM.children[0].children[5].children[0].children[1]
+            settingsBoxDOM.children[0].children[6].children[0].children[1]
                 .value;
         if (isNaN(lr) || parseFloat(lr) < 0)
             return renderError('Must provide positive numeric learning rate.');
@@ -509,24 +520,24 @@ class UI {
 
         if (SETTINGS['optimizer'] === 'Momentum') {
             let momentum =
-                settingsBoxDOM.children[0].children[6].children[0].children[1]
+                settingsBoxDOM.children[0].children[7].children[0].children[1]
                     .value;
             if (isNaN(momentum) || parseFloat(momentum) < 0)
                 return renderError('Must provide positive numeric momentum.');
             SETTINGS['momentum'] = parseFloat(momentum);
         } else delete SETTINGS.momentum;
 
-        let steps =
+        let epochs =
             settingsBoxDOM.children[0].children[
-                SETTINGS['optimizer'] === 'Momentum' ? 6 : 5
+                SETTINGS['optimizer'] === 'Momentum' ? 8 : 7
             ].children[0].children[1].value;
 
-        if (isNaN(steps) || parseInt(steps) < 0)
+        if (isNaN(epochs) || parseInt(epochs) < 0)
             return renderError(
-                'Must provide positive integer number of steps.'
+                'Must provide positive integer number of epochs.'
             );
-        SETTINGS['steps'] = parseInt(steps);
-
+        SETTINGS['epochs'] = parseInt(epochs);
+            
         return SETTINGS;
     }
 }
