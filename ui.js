@@ -274,7 +274,6 @@ const renderMessage = (type, message) => {
 
 const renderError = errorMessage => renderMessage('error', errorMessage);
 
-
 const deleteMessage = message => {
     MESSAGES.splice(MESSAGES.indexOf(message), 1);
 
