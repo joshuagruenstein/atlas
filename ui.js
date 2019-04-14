@@ -5,6 +5,8 @@ const variableBoxDOM = document.getElementById('variableBox');
 const messageBoxDOM = document.getElementById('messageBox');
 const settingsBoxDOM = document.getElementById('settingsBox');
 const visualizerBoxDOM = document.getElementById('visualizerBox');
+const modalBoxDOM = document.getElementById('modalBox');
+const navbarBoxDOM = document.getElementById('navbarBox');
 
 const VARIABLES = [];
 const MESSAGES = [];
@@ -13,6 +15,19 @@ const SETTINGS = {};
 let ON_VISUALIZER_CLICK;
 let ON_VISUALIZER_CANCEL;
 let ON_LOAD;
+
+const navbarBox = () => html`
+    <section class="navbar-section">
+        <a class="btn btn-action" href="#sidebar"> <i class="icon icon-menu"></i></a>
+    </section>
+    <section class="navbar-center">
+        <span class="text-primary">Atlas</span>
+    </section>
+    <section class="navbar-section">
+        <button class="btn mr-2 btn-action" @click=${showModal}><i class="icon icon-emoji"></i></button>
+        <button class="btn ml-2 btn-action"><i class="icon icon-share"></i></button>
+    </section>
+`
 
 const startVisualizerBox = () => html`
     <div class="empty panel">
@@ -51,6 +66,36 @@ const loadVisualizerBox = (progress, message) => html`
         </div>
     </div>
 `;
+
+const modalBox = active => html`
+    <div class="modal ${active ? 'active' : ''}" id="modal-id">
+        <a href="#close" @click=${closeModal} class="modal-overlay" aria-label="Close"></a>
+        <div class="modal-container">
+            <div class="modal-header">
+                <a href="#close" @click=${closeModal} class="btn btn-clear float-right" aria-label="Close"></a>
+                <div class="modal-title h5">About Atlas</div>
+            </div>
+
+            <div class="modal-body">
+                <div class="content">
+                    Atlas is an optimization loss surface visualizer built as a final project for <a href='http://math.mit.edu/classes/18.065/2019SP/'>18.065: Matrix Methods In Data Analysis, Signal Processing, And Machine Learning</a>, taught by <a href='http://www-math.mit.edu/~gs/'>Professor Gill Strang</a>.
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                Created by <a href='https://github.com/mfranzs'>Martin Schneider</a>, <a href='https://github.com/scherna'>Sammy Cherna</a>, <a href='https://github.com/lhirschfeld'>Lior Hirschfeld</a>, and <a href='https://github.com/joshuagruenstein'>Josh Gruenstein</a>.
+            </div>
+        </div>
+    </div>
+`
+
+const closeModal = () => {
+    render(modalBox(false), modalBoxDOM);
+}
+
+const showModal = () => {
+    render(modalBox(true), modalBoxDOM);
+}
 
 const variable = variable => html`
     <ul
@@ -546,6 +591,7 @@ window.onload = onload => {
     render(variableBox(VARIABLES), variableBoxDOM);
     render(settingsBox(SETTINGS), settingsBoxDOM);
     render(startVisualizerBox(), visualizerBoxDOM);
+    render(navbarBox(), navbarBoxDOM);
     ON_LOAD();
 };
 
