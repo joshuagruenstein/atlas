@@ -2,11 +2,13 @@ import {html, render} from 'https://unpkg.com/lit-html?module';
 
 const variableBoxDOM = document.getElementById("variableBox");
 const messageBoxDOM = document.getElementById("messageBox");
+const settingsBoxDOM = document.getElementById("settingsBox");
 
 const VARIABLES = [];
 const MESSAGES = [];
+const SETTINGS = {};
 
-const variable = (variable) => html `
+const variable = variable => html `
     <ul class="menu text-primary mt-2" style="width:250px" .variable=${variable}>
         <li class="menu-item pt-2">
             <div class="input-group">
@@ -67,17 +69,17 @@ const variable = (variable) => html `
     </ul>
 `;
 
-const message = (message) => html `
+const message = message => html `
     <div class="toast toast-${message.type} mt-2">
         <button class="btn btn-clear float-right" @click=${() => deleteMessage(message)}></button>
         ${message.content}
     </div>
 `
 
-const variableBox = (variables) => html `
+const variableBox = variables => html `
     ${variables.map(v => variable(v))}
 
-    <ul class="menu text-primary mt-2" style="width:250px">
+    <ul class="menu text-primary mt-2 mb-2" style="width:250px">
         <li class="menu-item">
             <a href="#" @click=${newVariable}>
                 <i class="icon icon-plus"></i> New Variable
@@ -87,12 +89,74 @@ const variableBox = (variables) => html `
 `;
 
 
-const messageBox = (messages) => html `
+const messageBox = messages => html `
     ${messages.map(m => message(m))}
 `
 
+const settingsBox = settings => html `
+    <ul class="menu">
 
-function typeChangeVariable(variable) {
+        <li class="divider" data-content="SURFACE"></li>
+
+        <li class="menu-item">
+            <div class="input-group">
+                <span class="input-group-addon">Points</span>
+                <input class="form-input" type="number" size="2" value="1000">
+            </div>
+        </li>
+
+        <li class="menu-item">
+            <label class="form-switch">
+                <input type="checkbox">
+
+                <i class="form-icon"></i> Show optimizer path
+            </label>
+        </li>
+
+        <li class="divider" data-content="OPTIMIZER"></li>
+
+        <li class="menu-item">
+            <select class="form-select" @change=${changeOptimizer}>
+                <option>SGD</option>
+                <option>Momentum</option>
+                <option>Adagrad</option>
+                <option>Adadelta</option>
+                <option>Adam</option>
+                <option>RMSProp</option>
+            </select>
+        </li>
+
+        <li class="menu-item pt-2">
+            <div class="input-group">
+                <span class="input-group-addon ">Learning Rate</span>
+                <input class="form-input" type="number" size="2" placeholder="0.01">
+            </div>
+        </li>
+
+        ${settings.optimizer === 'Momentum' ? html `
+            <li class="menu-item pt-2">
+                <div class="input-group">
+                    <span class="input-group-addon ">Momentum</span>
+                    <input class="form-input" type="number" size="2" placeholder="0.01">
+                </div>
+            </li>
+        ` : ''}
+
+        <li class="menu-item pt-2 pb-2">
+            <div class="input-group">
+                <span class="input-group-addon ">Steps</span>
+                <input class="form-input" type="number" size="2" value="50">
+            </div>
+        </li>
+    </ul>
+`
+
+const changeOptimizer = () => {
+    SETTINGS['optimizer'] = settingsBoxDOM.children[0].children[4].children[0].value;
+    render(settingsBox(SETTINGS), settingsBoxDOM);
+}
+
+const typeChangeVariable = variable => {
     let menu = Array.from(variableBoxDOM.children).filter(
         child => child.variable === variable
     )[0];
@@ -102,7 +166,7 @@ function typeChangeVariable(variable) {
     render(variableBox(VARIABLES), variableBoxDOM);
 }
 
-function renderError(errorMessage) {
+const renderError = errorMessage => {
     MESSAGES.push({
         type:'error',
         content:errorMessage
@@ -113,13 +177,13 @@ function renderError(errorMessage) {
     return null;
 }
 
-function deleteMessage(message) {
+const deleteMessage = message => {
     MESSAGES.splice(MESSAGES.indexOf(message), 1);
 
     render(messageBox(MESSAGES), messageBoxDOM);
 }
 
-function parseCSV(str, type) {
+const parseCSV = (str, type) => {
     let arr = [];
 
     for (let row = 0, col = 0, c = 0; c < str.length; c++) {
@@ -171,19 +235,19 @@ function csvVariable(variable) {
     picker.click();
 }
 
-function deleteVariable(variable) {
+const deleteVariable = variable => {
     VARIABLES.splice(VARIABLES.indexOf(variable), 1);
 
     render(variableBox(VARIABLES), variableBoxDOM);
 }
 
-function newVariable(variable) {
+const newVariable = variable => {
     VARIABLES.push({ type:"Scalar" });
 
     render(variableBox(VARIABLES), variableBoxDOM);
 }
 
-function getVariables() {
+const getVariables = () => {
     for (let el of variableBoxDOM.children) {
         if (!el.variable) continue;
 
@@ -228,6 +292,36 @@ function getVariables() {
     return VARIABLES;
 }
 
-window.onload = function() {
+const getSettings = () => {
+    let points = settingsBoxDOM.children[0].children[1].children[0].children[1].value;
+    if (isNaN(points) || parseInt(points) < 0) return renderError("Must provide positive integer number of points.");
+    
+    SETTINGS['points'] = parseInt(points);
+
+    SETTINGS['showPath'] = settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
+
+    let lr = settingsBoxDOM.children[0].children[5].children[0].children[1].value;
+    if (isNaN(lr) || parseFloat(lr) < 0) return renderError("Must provide positive numeric learning rate.");
+
+    SETTINGS['learningRate'] = parseFloat(lr);
+
+    if (SETTINGS['optimizer'] === 'Momentum') {
+        let momentum = settingsBoxDOM.children[0].children[6].children[0].children[1].value;
+        if (isNaN(momentum) || parseFloat(momentum) < 0) return renderError("Must provide positive numeric momentum.");
+        SETTINGS['momentum'] = parseFloat(momentum);
+    } else delete SETTINGS.momentum;
+
+    let steps = settingsBoxDOM.children[0].children[
+        SETTINGS['optimizer']==='Momentum'?6:5
+    ].children[0].children[1].value;
+
+    if (isNaN(steps) || parseInt(steps) < 0) return renderError("Must provide positive integer number of steps.");
+    SETTINGS['steps'] = parseInt(steps);
+
+    return SETTINGS;
+}
+
+window.onload = () => {
     render(variableBox(VARIABLES), variableBoxDOM);
+    render(settingsBox(SETTINGS), settingsBoxDOM);
 }
