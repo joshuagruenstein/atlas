@@ -200,5 +200,5 @@ UI.setVisualizerStartHandler(() => {
 
 
 UI.setVisualizerCancelHandler(() => {
-    // cancel();
+    cancel();
 });
