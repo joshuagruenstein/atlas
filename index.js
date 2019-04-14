@@ -1,4 +1,5 @@
-import UI from './ui.js';
+import UI from "./ui.js";
+import loss_surface_generation from "./loss_surface_generation.js";
 
 UI.setOnloadHandler(() => {
     UI.renderSuccess('hi');

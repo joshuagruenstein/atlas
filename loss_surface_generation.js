@@ -1,3 +1,6 @@
+import UI from "./ui.js";
+console.log(UI);
+
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
@@ -23,6 +26,7 @@ async function generateLossSurface(model, data, labels, granularity = 10) {
  */
 async function reportLossSurfaceGenerationProgress(message, percent) {
   console.log("reportLossSurfaceGenerationProgress", message, percent);
+  UI.setVisualizerLoading(percent * 100, message);
   await delay(1); // Delay 1 ms so page has time to re-render
 }
 
@@ -175,7 +179,9 @@ function test() {
     const data = tf.randomNormal([100, 78]);
     const labels = tf.randomUniform([100, 10]);
 
-    generateLossSurface(model, data, labels);
+    const lossSurface = generateLossSurface(model, data, labels);
+
+    UI.setVisualizerPlotSurface(lossSurface);
 }
 
 /**
@@ -187,4 +193,11 @@ function delay(t, v) {
     });
 }
 
-test();
+UI.setVisualizerStartHandler(() => {
+    test();
+});
+
+
+UI.setVisualizerStartHandler(() => {
+    cancel();
+});
