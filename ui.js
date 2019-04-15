@@ -125,13 +125,19 @@ class UI {
 
         if (!variables || !settings) return this.renderError("Must correct errors beforing sharing.");
 
-        let dump = encodeURIComponent(btoa(JSON.stringify({
+        let dumpData = {
             variables:variables,
-            settings:settings
-        })));
+            settings:settings,
+            expression:this.getExpression()
+        }
+
+        if (this.plotData) dumpData.plotData = this.plotData;
+
+        let dump = encodeURIComponent(btoa(JSON.stringify(dumpData)));
 
         let base = window.location.href.split("#")[0];
         let url = base + "#dump=" + dump;
+
 
         copyToClipboard(url);
 
@@ -152,6 +158,21 @@ class UI {
 
         this.setVariables();
         this.setSettings();
+
+        let kill = setInterval(() => {
+            if (window.MathJaxInitialized) {
+                this.setExpression(data.expression);
+                clearInterval(kill);
+            }
+        }, 10);
+
+        if (data.plotData) {
+            if (data.plotData.type === 'surface') {
+                this.setVisualizerPlotSurface(data.plotData.data, data.plotData.path);
+            } else {
+                this.setVisualizerPlotLine(data.plotData.x, data.plotData.y);
+            }
+        }
     }
 
     refreshView() {
@@ -224,6 +245,8 @@ class UI {
     }
 
     setVisualizerPlotSurface(data, path = null) {
+        this.plotData = {'type':'surface', 'data':data, 'path':path};
+
         render(
             plotVisualizerBox(this.onCancel.bind(this)),
             this.visualizerBoxDOM
@@ -233,6 +256,8 @@ class UI {
     }
 
     setVisualizerPlotLine(x, y) {
+        this.plotData = {'type':'line', 'x':x, 'y':y};
+
         render(
             plotVisualizerBox(this.onCancel.bind(this)),
             this.visualizerBoxDOM
@@ -390,7 +415,7 @@ class UI {
 
     setVariables() {
         this.refreshView();
-        
+
         for (let el of this.variableBoxDOM.children) {
             if (!el.variable) continue;
 

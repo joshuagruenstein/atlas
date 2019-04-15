@@ -72,7 +72,9 @@ window.MathJax = {
             let math = MathJax.Hub.getAllJax('expressionRendering')[0];
             expressionSource.addEventListener('input', function() {
                 MathJax.Hub.Queue(['Text', math, expressionSource.value]);
-            })
+            });
+
+            window.MathJaxInitialized = true;
         });
 
         MathJax.Hub.Register.StartupHook('AsciiMath Jax Ready', function () {
