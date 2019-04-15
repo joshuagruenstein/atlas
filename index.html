@@ -8,6 +8,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pca-js@1.0.0/pca.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
 
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
@@ -25,13 +26,10 @@
     <div class="off-canvas-sidebar bg-primary" id="sidebar">
 
         <div class="container pt-2">
-
-        <h4 class="text-center pt-2">Variables</h4>
-
-        <div id="variableBox"></div>
-    </div>
+            <h4 class="text-center pt-2">Variables</h4>
+            <div id="variableBox"></div>
+        </div>
   
-
     </div>
 
     <a class="off-canvas-overlay" href="#close"></a>
@@ -74,7 +72,9 @@ window.MathJax = {
             let math = MathJax.Hub.getAllJax('expressionRendering')[0];
             expressionSource.addEventListener('input', function() {
                 MathJax.Hub.Queue(['Text', math, expressionSource.value]);
-            })
+            });
+
+            window.MathJaxInitialized = true;
         });
 
         MathJax.Hub.Register.StartupHook('AsciiMath Jax Ready', function () {

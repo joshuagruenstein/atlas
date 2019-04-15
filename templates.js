@@ -1,6 +1,6 @@
 import { html } from 'https://unpkg.com/lit-html?module';
 
-export const navbarBox = showModal => html`
+export const navbarBox = (showModal, exportLink) => html`
     <section class="navbar-section">
         <a class="btn btn-action" href="#sidebar">
             <i class="icon icon-menu"></i
@@ -13,7 +13,7 @@ export const navbarBox = showModal => html`
         <button class="btn mr-2 btn-action" @click=${showModal}>
             <i class="icon icon-emoji"></i>
         </button>
-        <button class="btn ml-2 btn-action">
+        <button class="btn ml-2 btn-action tooltip tooltip-left" data-tooltip="Share with a friend." @click=${exportLink}>
             <i class="icon icon-share"></i>
         </button>
     </section>
@@ -38,7 +38,7 @@ export const plotVisualizerBox = visualizerCancel => html`
     <div class="panel">
         <div id="plotBox"></div>
         <button class="btn btn-error m-2" @click=${visualizerCancel}>
-            Cancel
+            Close Plot
         </button>
     </div>
 `;
@@ -253,7 +253,7 @@ export const settingsBox = (settings, changeOptimizer) => html`
 
         <li class="menu-item">
             <label class="form-switch">
-                <input type="checkbox" />
+                <input type="checkbox" checked/>
 
                 <i class="form-icon"></i> Show optimizer path
             </label>
@@ -261,7 +261,7 @@ export const settingsBox = (settings, changeOptimizer) => html`
 
         <li class="menu-item">
             <label class="form-switch">
-                <input type="checkbox" />
+                <input type="checkbox" checked/>
 
                 <i class="form-icon"></i> Use PCA directions
             </label>
@@ -287,7 +287,7 @@ export const settingsBox = (settings, changeOptimizer) => html`
                     class="form-input"
                     type="number"
                     size="2"
-                    placeholder="0.01"
+                    value="0.01"
                 />
             </div>
         </li>
