@@ -14,24 +14,22 @@
     }
     function getVariable(varName) {
         let vars = UI.getVariables();
-        console.log(vars);
-        console.log(varName);
+        let match = null;
         vars.forEach((v, i) => {
             if (v.name === varName) {
-                return getTF(v);
+                match = getTF(v);
             }
         });
-        return "uH OH";
+        return match;
     }
 %}
 
 norm -> 
-    "||" expression "||" {% (_, expr, __) => tf.norm(expr) %}
+    "||" expression "||" {% (l, expr, r) => tf.norm(expr) %}
 
 expression ->
-    expression "*" expression {% (fst, _, snd) => tf.mul(fst, snd) %}
-  | expression "+" expression {% (fst, _, snd) => tf.add(fst, snd) %}
+    expression "*" expression {% ([fst, _, snd]) => tf.mul(fst, snd) %}
+  | expression "+" expression {% ([fst, _, snd]) => tf.add(fst, snd) %}
   | variable {% id %}
 
-variable -> [a-zA-Z] {% getVariable %}
-
+variable -> [a-zA-Z] {% (x) => getVariable(x[0]) %}
