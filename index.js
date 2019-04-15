@@ -3,17 +3,31 @@ import "./loss_surface_generation.js";
 import nearly from "./nearly.js";
 import './grammar.js';
 
-console.log(nearly);
+function getVariable(varName) {
+    let vars = UI.getVariables();
+    let match = null;
+    vars.forEach((v, i) => {
+        if (v.name === varName) {
+            match = v;
+        }
+    });
+    return match;
+}
 
 UI.setOnloadHandler(() => {
     UI.renderSuccess('PLS SVAE ME I AM STUCK ISN THE COMPUTER HELEPLEPLEPL.');
 });
 
 UI.setVisualizerStartHandler(() => {
-    console.log('beeboop');
-    console.log(UI.getExpression());
+    let tokens = Array.from(moo.compile({
+        variable: {match: /[a-zA-Z]/, value: v => getVariable(v)},
+        plus: /\+/,
+        times: /\*/,
+        normsign: /\|\|/,
+        number: /[1-9][0-9]*/,
+    }).reset(UI.getExpression()));
     const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
-    parser.feed(UI.getExpression());
+    parser.feed(tokens);
     console.log(parser.results);
 });
 
