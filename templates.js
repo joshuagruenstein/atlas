@@ -38,7 +38,7 @@ export const plotVisualizerBox = visualizerCancel => html`
     <div class="panel">
         <div id="plotBox"></div>
         <button class="btn btn-error m-2" @click=${visualizerCancel}>
-            Cancel
+            Close Plot
         </button>
     </div>
 `;
@@ -253,7 +253,7 @@ export const settingsBox = (settings, changeOptimizer) => html`
 
         <li class="menu-item">
             <label class="form-switch">
-                <input type="checkbox" />
+                <input type="checkbox" checked/>
 
                 <i class="form-icon"></i> Show optimizer path
             </label>
@@ -261,7 +261,7 @@ export const settingsBox = (settings, changeOptimizer) => html`
 
         <li class="menu-item">
             <label class="form-switch">
-                <input type="checkbox" />
+                <input type="checkbox" checked/>
 
                 <i class="form-icon"></i> Use PCA directions
             </label>
