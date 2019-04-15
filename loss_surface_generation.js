@@ -21,21 +21,23 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
     const weightVectorA = runPCA ? trainData["pca"][0] : await randomNormalizedWeightVector(model);
     const weightVectorB = runPCA ? trainData["pca"][1] : await randomNormalizedWeightVector(model);
 
-    const pathPositions = showPath ? await computeWeightTrajectoryPositions(trainData["weightVectors"], optimalWeightVector, weightVectorA, weightVectorB) : null;
+    const normalizedA = weightVectorA.div(weightVectorA.norm(2));
+    const normalizedB = weightVectorB.div(weightVectorB.norm(2));
 
-    const lossSurface = await computeLossSurface(model, data, labels, optimalWeightVector, weightVectorA, weightVectorB, granularity);
+    const pathPositions = showPath ? await computeWeightTrajectoryPositions(trainData["weightVectors"], optimalWeightVector, normalizedA, normalizedB) : null;
+
+    const { lossSurface, percentPathPositions} = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedA, normalizedB, granularity, pathPositions);
 
     await reportLossSurfaceGenerationProgress("Drawing plot ... ", 0, true);
 
     running = false;
-    return { lossSurface, pathPositions };
+    return { lossSurface, pathPositions: percentPathPositions };
 }
 
 /**
  * Report progress.
  */
 async function reportLossSurfaceGenerationProgress(message, percent, waitForUIUpdate=false) {
-  console.log("reportLossSurfaceGenerationProgress", message, percent);
   UI.setVisualizerLoading(percent * 100, message);
 
   if(waitForUIUpdate) await delay(100); // Delay 1 ms so page has time to re-render
@@ -94,20 +96,48 @@ async function loadModelWeighWeightVector(model, weightVector) {
  * Compute a loss surface for a {model} on some {data}, centered around our {optimalWeightVector}, using the directions of
  * {randomWeightVectorA} and {randomWeightVectorB}.
  */
-async function computeLossSurface(model, data, labels, optimalWeightVector, randomWeightVectorA, randomWeightVectorB, granularity = 10) {
-    const stepSize = 2 / granularity;
-
+async function computeLossSurface(model, data, labels, optimalWeightVector, randomWeightVectorA, randomWeightVectorB, granularity = 10, pathPositions = null) {
     let evalIndex = 0;
 
-    const losses = [];
-    for (let a = -1; a <= 1; a += stepSize) {
+    // TODO: Fix no pathPositions
+    
+    // // Stretching
+    // let aMin = Math.min(-1, Math.min(...pathPositions.map(x => x[0])));
+    // let aMax = Math.max(1, Math.max(...pathPositions.map(x => x[0])));
+    // let bMin = Math.min(-1, Math.min(...pathPositions.map(x => x[1])));
+    // let bMax = Math.max(1, Math.max(...pathPositions.map(x => x[1])));
+
+    // Fit exactly to points
+    let aMax = Math.max(...pathPositions.map(p => p[0]));
+    let bMin = Math.min(...pathPositions.map(p => p[1]));
+    let aMin = Math.min(...pathPositions.map(p => p[0]));
+    let bMax = Math.max(...pathPositions.map(p => p[1]));
+
+    // Square
+    const maxStretch = Math.max(Math.abs(aMin), Math.abs(bMin), Math.abs(aMax), Math.abs(bMax));
+    aMin = -maxStretch;
+    bMin = -maxStretch;
+    aMax = maxStretch;
+    bMax = maxStretch;
+
+    const aStepSize = (aMax - aMin) / granularity;
+    const bStepSize = (bMax - bMin) / granularity;
+
+    aMin -= aStepSize * 2;
+    aMax += aStepSize * 2;
+
+    bMin -= bStepSize * 2;
+    bMax += bStepSize * 2;
+
+    const lossSurface = [];
+    for (let a = aMin; a <= aMax; a += aStepSize) {
         const rowLosses = [];
-        losses.push(rowLosses);
+        lossSurface.push(rowLosses);
 
-        for (let b = -1; b <= 1; b += stepSize) {
-            console.assert(a >= -1 && a <= 1 && b >= -1 && b <= 1);
+        for (let b = bMin; b <= bMax; b += bStepSize) {
+            // console.assert(a >= -1 && a <= 1 && b >= -1 && b <= 1);
 
-            await reportLossSurfaceGenerationProgress("Generating Loss Surface", evalIndex / Math.pow((granularity + 1), 2));
+            await reportLossSurfaceGenerationProgress("Generating Loss Surface", evalIndex / (((aMax - aMin) / aStepSize) * (bMax - bMin) / bStepSize));
 
             const weightVector = optimalWeightVector.add(randomWeightVectorA.mul(a).add(randomWeightVectorB.mul(b)));
             loadModelWeighWeightVector(model, weightVector);
@@ -124,7 +154,12 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
         }
     }
 
-    return losses;
+    // Compute path positions as percents along the a and b axes
+    const percentPathPositions = pathPositions.map(p => 
+        [(p[0] - aMin) / (aMax - aMin),
+         (p[1] - bMin) / (bMax - bMin)]);
+
+    return { lossSurface, percentPathPositions };
 }
 
 /**
@@ -143,7 +178,7 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
 
     const onBatchEnd = (batch, logs) => {
         // TODO: Wire this up to UI
-        console.log('Accuracy', logs.acc);
+        console.log('Accuracy', logs.acc, "Loss", logs.loss);
     };
 
     const onEpochEnd = async (epoch) => {
@@ -157,7 +192,7 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
 
     await model.fit(data, labels, {
       epochs: learningParameters["epochs"],
-      batchSize: 32,
+      batchSize: 100,
       callbacks: { onBatchEnd, onEpochEnd }
     });
 
@@ -186,14 +221,13 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
 /**
  * Project each of the weight vectors onto 2D coordinates.
  */
-async function computeWeightTrajectoryPositions(weightVectors, optimalWeightVector, weightVectorA, weightVectorB) {
-    console.log(weightVectorA);
-    const normalizedA = weightVectorA.div(weightVectorA.norm('euclidean'));
-    const normalizedB = weightVectorB.div(weightVectorB.norm('euclidean'));
-
+async function computeWeightTrajectoryPositions(weightVectors, optimalWeightVector, normalizedA, normalizedB) {
     return await Promise.all(weightVectors.map(async weightVector => {
         const diff = weightVector.sub(optimalWeightVector);
-        return [(await diff.dot(normalizedA).data())[0], (await diff.dot(normalizedB).data())[0]];
+        return [
+            (await diff.dot(normalizedA).data())[0],
+            (await diff.dot(normalizedB).data())[0]
+        ];
     }));
 }
 

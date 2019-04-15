@@ -261,7 +261,7 @@ const settingsBox = (settings, changeOptimizer) => html`
 
         <li class="menu-item">
             <label class="form-switch">
-                <input type="checkbox" />
+                <input type="checkbox" checked/>
 
                 <i class="form-icon"></i> Use PCA directions
             </label>

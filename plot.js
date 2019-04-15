@@ -51,15 +51,27 @@ class Plot {
         const context = [];
 
         if (path) {
+            // const scaledPath = path.map(p => 
+            //     [((p[0] + 1) * data[0].length) / 2,
+            //         ((p[1] + 1) * data.length) / 2]);
+
+            console.log({path});
+
+            const scaledPath = path.map(p =>
+                [(p[0] * data[0].length),
+                (p[1] * data.length)]);
+
+            const zOffset = (Math.max(...data.flat()) - Math.min(...data.flat())) * .03;
+            
             context.push({
                 type: 'scatter3d',
                 mode: 'lines',
-                x: path.map(p => p[0]),
-                y: path.map(p => p[1]),
-                z: path.map(p => this.getHeight(data, p[0], p[1]) + 0.01),
+                x: scaledPath.map(p => p[0]),
+                y: scaledPath.map(p => p[1]),
+                z: scaledPath.map(p => this.getHeight(data, p[0], p[1]) + zOffset),
                 opacity: 1,
                 line: {
-                    color: 'black',
+                    color: 'orange',
                     width: 6
                 }
             });
@@ -75,21 +87,22 @@ class Plot {
         Plotly.newPlot(this.div, context, this.layout);
     }
 
-    getHeight(data, x, y) {
+    getHeight(data, xScaled, yScaled) {
         /**
          * @param data 2D array of heights.
          * @param x    x-coordinate of point of interest.
          * @param y    y-coordinate of point of interest.
          */
-        const xScaled = ((x + 1) * data[0].length) / 2;
-        const yScaled = ((y + 1) * data.length) / 2;
 
         const neighborX = Math.floor(xScaled);
         const neighborY = Math.floor(yScaled);
+
+        console.log({neighborX, neighborY});
+
         const neighborZ = data[neighborY][neighborX];
 
         const gradX = data[neighborY][neighborX + 1] - neighborZ;
-        const gradY = data[nieghborY + 1][neighborX] - neighborZ;
+        const gradY = data[neighborY + 1][neighborX] - neighborZ;
 
         return (
             neighborZ +
