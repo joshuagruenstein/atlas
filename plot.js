@@ -51,27 +51,33 @@ class Plot {
         const context = [];
 
         if (path) {
-            // const scaledPath = path.map(p => 
+            // const scaledPath = path.map(p =>
             //     [((p[0] + 1) * data[0].length) / 2,
             //         ((p[1] + 1) * data.length) / 2]);
 
-            console.log({path});
+            console.log({ path });
 
-            const scaledPath = path.map(p =>
-                [(p[0] * data[0].length),
-                (p[1] * data.length)]);
+            const scaledPath = path.map(p => [
+                p[0] * data[0].length,
+                p[1] * data.length
+            ]);
 
-            const zOffset = (Math.max(...data.flat()) - Math.min(...data.flat())) * .03;
-            
+            const zOffset =
+                (Math.max(...data.flat()) - Math.min(...data.flat())) * 0.03;
+
             context.push({
                 type: 'scatter3d',
                 mode: 'lines',
                 x: scaledPath.map(p => p[0]),
                 y: scaledPath.map(p => p[1]),
-                z: scaledPath.map(p => this.getHeight(data, p[0], p[1]) + zOffset),
+                z: scaledPath.map(
+                    p => this.getHeight(data, p[0], p[1]) + zOffset
+                ),
                 opacity: 1,
                 line: {
-                    color: 'orange',
+                    color: [...Array(scaledPath.length).keys()],
+                    colorscale: 'YIOrRd',
+                    reversescale: true,
                     width: 6
                 }
             });
@@ -80,7 +86,7 @@ class Plot {
         context.push({
             z: data,
             type: 'surface',
-            colorscale: 'YIGnBu',
+            colorscale: 'Viridis',
             showscale: false
         });
 
@@ -97,7 +103,7 @@ class Plot {
         const neighborX = Math.floor(xScaled);
         const neighborY = Math.floor(yScaled);
 
-        console.log({neighborX, neighborY});
+        console.log({ neighborX, neighborY });
 
         const neighborZ = data[neighborY][neighborX];
 
