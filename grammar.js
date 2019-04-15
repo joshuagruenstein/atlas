@@ -3,41 +3,54 @@
 (function () {
 function id(x) { return x[0]; }
 
-    import UI from './ui.js';
-    let vars = UI.getVariables();
-    function getTF(var) {
-        switch (var['type']) {
-            case 'Scalar':
-                return var['trainable'] ? tf.scalar(Math.random()).variable() : tf.scalar(var['data']);
-                break;
-            case 'Vector':
-                return var['trainable'] ? tf.tensor1d(Math.random()).variable() : tf.tensor1d(Math.random());
-                break;
-            default:
-                return 'uh oh';
-                break;
-        }
+
+    const tokenScalar = {test: x => x.type === 'variable' && x.value !== null && x.value.type === 'Scalar'};
+    const tokenVector = {test: x => x.type === 'variable' && x.value !== null && x.value.type === 'Vector'};
+    const tokenMatrix = {test: x => x.type === 'variable' && x.value !== null && x.value.type === 'Matrix'};
+    const tokenPlus = {test: x => x.value === '+'};
+    const tokenTimes = {test: x => x.value === '*'};
+    const tokenNormsign = {test: x => x.value === '||'};
+    const tokenNumber = {test: x => x.type === 'number'};
+
+    function getTfScalar(v) {
+        return v.trainable ? tf.scalar(Math.random()).variable() : tf.scalar(parseFloat(v.data));
     }
-    function getVariable(varName) {
-        vars.forEach((var, i) => {
-            if (var['name'] === varName) {
-                return getTF(var);
-            }
-        });
-        return "uH OH";
+
+    function getTfNumber(v) {
+        return tf.scalar(parseFloat(v));
+    }
+
+    function getTfVector(v) {
+        return v.trainable ? tf.vector1d(Math.random()).variable() : tf.vector1d(v.data);
+    }
+
+    function getTfMatrix(v) {
+        return v.trainable ? tf.vector2d(Math.random()).variable() : tf.vector2d(v.data);
     }
 var grammar = {
     Lexer: undefined,
     ParserRules: [
-    {"name": "norm$string$1", "symbols": [{"literal":"|"}, {"literal":"|"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "norm$string$2", "symbols": [{"literal":"|"}, {"literal":"|"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "norm", "symbols": ["norm$string$1", "expression", "norm$string$2"], "postprocess": (_, expr, _) => tf.norm(expr)},
-    {"name": "expression", "symbols": ["expression", {"literal":"*"}, "expression"], "postprocess": (fst, _, snd) => tf.mul(fst, snd)},
-    {"name": "expression", "symbols": ["expression", {"literal":"+"}, "expression"], "postprocess": (fst, _, snd) => tf.add(fst, snd)},
-    {"name": "expression", "symbols": ["variable"], "postprocess": id},
-    {"name": "variable", "symbols": [/[a-zA-Z]/], "postprocess": getVariable}
+    {"name": "scalarExpression", "symbols": ["scalarSum"], "postprocess": id},
+    {"name": "scalarSum", "symbols": ["scalarSum", tokenPlus, "scalarProduct"], "postprocess": ([fst, _, snd]) => tf.add(fst, snd)},
+    {"name": "scalarSum", "symbols": ["scalarProduct"], "postprocess": id},
+    {"name": "scalarProduct", "symbols": ["scalarProduct", tokenTimes, "scalar"], "postprocess": ([fst, _, snd]) => tf.mul(fst, snd)},
+    {"name": "scalarProduct", "symbols": ["scalar"], "postprocess": id},
+    {"name": "scalar", "symbols": [tokenScalar], "postprocess": (s) => getTfScalar(s[0].value)},
+    {"name": "scalar", "symbols": [tokenNumber], "postprocess": (n) => getTfNumber(n[0].value)},
+    {"name": "scalar", "symbols": [tokenNormsign, "vectorSum", tokenNormsign], "postprocess": ([l, v, r]) => tf.norm(v)},
+    {"name": "scalar", "symbols": [tokenNormsign, "matrixSum", tokenNormsign], "postprocess": ([l, v, r]) => tf.norm(v)},
+    {"name": "vectorSum", "symbols": ["vectorSum", tokenPlus, "vectorProduct"], "postprocess": ([fst, _, snd]) => tf.add(fst, snd)},
+    {"name": "vectorSum", "symbols": ["vectorProduct"], "postprocess": id},
+    {"name": "vectorProduct", "symbols": ["vectorProduct", tokenTimes, "vector"], "postprocess": ([fst, _, snd]) => tf.mul(fst, snd)},
+    {"name": "vectorProduct", "symbols": ["vector"], "postprocess": id},
+    {"name": "matrixSum", "symbols": ["matrixSum", tokenPlus, "matrixProduct"], "postprocess": ([fst, _, snd]) => tf.add(fst, snd)},
+    {"name": "matrixSum", "symbols": ["matrixProduct"], "postprocess": id},
+    {"name": "matrixProduct", "symbols": ["matrixProduct", tokenTimes, "matrix"], "postprocess": ([fst, _, snd]) => tf.mul(fst, snd)},
+    {"name": "matrixProduct", "symbols": ["matrix"], "postprocess": id},
+    {"name": "vector", "symbols": [tokenVector], "postprocess": (s) => getTfVector(s[0].value)},
+    {"name": "matrix", "symbols": [tokenMatrix], "postprocess": (s) => getTfMatrix(s[0].value)}
 ]
-  , ParserStart: "norm"
+  , ParserStart: "scalarExpression"
 }
 if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
    module.exports = grammar;

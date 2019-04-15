@@ -26,13 +26,10 @@
     <div class="off-canvas-sidebar bg-primary" id="sidebar">
 
         <div class="container pt-2">
-
-        <h4 class="text-center pt-2">Variables</h4>
-
-        <div id="variableBox"></div>
-    </div>
+            <h4 class="text-center pt-2">Variables</h4>
+            <div id="variableBox"></div>
+        </div>
   
-
     </div>
 
     <a class="off-canvas-overlay" href="#close"></a>
@@ -64,6 +61,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=AM_CHTML"></script>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="moo.js"></script>
 
 <script>
 window.MathJax = {
@@ -75,7 +73,9 @@ window.MathJax = {
             let math = MathJax.Hub.getAllJax('expressionRendering')[0];
             expressionSource.addEventListener('input', function() {
                 MathJax.Hub.Queue(['Text', math, expressionSource.value]);
-            })
+            });
+
+            window.MathJaxInitialized = true;
         });
 
         MathJax.Hub.Register.StartupHook('AsciiMath Jax Ready', function () {
