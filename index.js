@@ -18,18 +18,18 @@ UI.setOnloadHandler(() => {
     UI.renderSuccess('PLS SVAE ME I AM STUCK ISN THE COMPUTER HELEPLEPLEPL.');
 });
 
-UI.setVisualizerStartHandler(() => {
-    let tokens = Array.from(moo.compile({
-        variable: {match: /[a-zA-Z]/, value: v => getVariable(v)},
-        plus: /\+/,
-        times: /\*/,
-        normsign: /\|\|/,
-        number: /[1-9][0-9]*/,
-    }).reset(UI.getExpression()));
-    const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
-    parser.feed(tokens);
-    console.log(parser.results);
-});
+// UI.setVisualizerStartHandler(() => {
+//     let tokens = Array.from(moo.compile({
+//         variable: {match: /[a-zA-Z]/, value: v => getVariable(v)},
+//         plus: /\+/,
+//         times: /\*/,
+//         normsign: /\|\|/,
+//         number: /[1-9][0-9]*/,
+//     }).reset(UI.getExpression()));
+//     const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
+//     parser.feed(tokens);
+//     console.log(parser.results);
+// });
 
 // UI.setVisualizerCancelHandler(() => {
 //     UI.setVisualizerStart();
