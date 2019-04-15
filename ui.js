@@ -1,4 +1,4 @@
-import { render } from 'https://unpkg.com/lit-html?module';
+import { html, render } from 'https://unpkg.com/lit-html?module';
 
 import {
     navbarBox,
@@ -11,12 +11,12 @@ import {
     settingsBox
 } from './templates.js';
 
-import { parseCSV } from './utils.js';
+import { copyToClipboard, parseCSV } from './utils.js';
 
 import Plot from './plot.js';
 
 class UI {
-    constructor() {
+    constructor() {        
         this.variables = [];
         this.messages = [];
         this.settings = {};
@@ -27,11 +27,14 @@ class UI {
         this.visualizerBoxDOM = document.getElementById('visualizerBox');
         this.modalBoxDOM = document.getElementById('modalBox');
         this.navbarBoxDOM = document.getElementById('navbarBox');
+        this.expressionSourceDOM = document.getElementById("expressionSource");
 
         window.onload = onload => {
             this.setVisualizerStart();
             this.refreshView();
             this.onLoad();
+
+            this.setStateFromURL();
         };
     }
 
@@ -116,8 +119,43 @@ class UI {
         this.refreshView();
     }
 
+    exportURL() {
+        let variables = this.getVariables();
+        let settings = this.getSettings();
+
+        if (!variables || !settings) return this.renderError("Must correct errors beforing sharing.");
+
+        let dump = encodeURIComponent(btoa(JSON.stringify({
+            variables:variables,
+            settings:settings
+        })));
+
+        let base = window.location.href.split("#")[0];
+        let url = base + "#dump=" + dump;
+
+        copyToClipboard(url);
+
+        this.renderSuccess(html`Copied <a href='${url}'>sharing URL</a> to clipboard.`);
+
+    }
+
+    setStateFromURL() {
+        let url = window.location.href.split("#");
+
+        if (url.length !== 2 || url[1].substring(0,5) !== 'dump=') return;
+
+        let dump = atob(decodeURIComponent(url[1].substring(5)));
+        let data = JSON.parse(dump);
+
+        this.settings = data.settings;
+        this.variables = data.variables;
+
+        this.setVariables();
+        this.setSettings();
+    }
+
     refreshView() {
-        render(navbarBox(this.showModal.bind(this)), this.navbarBoxDOM);
+        render(navbarBox(this.showModal.bind(this), this.exportURL.bind(this)), this.navbarBoxDOM);
 
         render(
             variableBox(
@@ -175,7 +213,7 @@ class UI {
     }
 
     getExpression() {
-        return document.getElementById("expressionSource").value;
+        return this.expressionSourceDOM.value;
     }
 
     setVisualizerLoading(progress, message) {
@@ -202,6 +240,59 @@ class UI {
         let plot = new Plot('plotBox', 'Loss Curve');
         plot.line(x, y);
     }
+
+    getSettings() {
+        this.changeOptimizer();
+
+        let granularity = this.settingsBoxDOM.children[0].children[1]
+            .children[0].children[1].value;
+        if (isNaN(granularity) || parseInt(granularity) < 0)
+            return this.renderError(
+                'Must provide positive integer granularity.'
+            );
+
+        this.settings['granularity'] = parseInt(granularity);
+
+        this.settings[
+            'showPath'
+        ] = this.settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
+
+        this.settings[
+            'usePCA'
+        ] = this.settingsBoxDOM.children[0].children[3].children[0].children[0].checked;
+
+        let lr = this.settingsBoxDOM.children[0].children[6].children[0]
+            .children[1].value;
+        if (lr === "" || isNaN(lr) || parseFloat(lr) < 0)
+            return this.renderError(
+                'Must provide positive numeric learning rate.'
+            );
+
+        this.settings['learningRate'] = parseFloat(lr);
+
+        if (this.settings['optimizer'] === 'Momentum') {
+            let momentum = this.settingsBoxDOM.children[0].children[7]
+                .children[0].children[1].value;
+            if (momentum === "" ||isNaN(momentum) || parseFloat(momentum) < 0)
+                return this.renderError(
+                    'Must provide positive numeric momentum.'
+                );
+            this.settings['momentum'] = parseFloat(momentum);
+        } else delete this.settings.momentum;
+
+        let epochs = this.settingsBoxDOM.children[0].children[
+            this.settings['optimizer'] === 'Momentum' ? 8 : 7
+        ].children[0].children[1].value;
+
+        if (epochs === "" || isNaN(epochs) || parseInt(epochs) < 0)
+            return this.renderError(
+                'Must provide positive integer number of epochs.'
+            );
+        this.settings['epochs'] = parseInt(epochs);
+
+        return this.settings;
+    }
+
 
     getVariables() {
         for (let el of this.variableBoxDOM.children) {
@@ -297,55 +388,61 @@ class UI {
         return this.variables;
     }
 
-    getSettings() {
-        let granularity = this.settingsBoxDOM.children[0].children[1]
-            .children[0].children[1].value;
-        if (isNaN(granularity) || parseInt(granularity) < 0)
-            return this.renderError(
-                'Must provide positive integer granularity.'
-            );
+    setVariables() {
+        this.refreshView();
+        
+        for (let el of this.variableBoxDOM.children) {
+            if (!el.variable) continue;
 
-        this.settings['granularity'] = parseInt(granularity);
+            console.log("HELLO WORLD!");
+            el.children[0].children[0].children[0].value = el.variable.name;
 
-        this.settings[
-            'showPath'
-        ] = this.settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
+            el.getElementsByClassName(
+                'form-switch'
+            )[0].children[0].checked = el.variable.trainable;
 
-        this.settings[
-            'usePCA'
-        ] = this.settingsBoxDOM.children[0].children[3].children[0].children[0].checked;
+            el.children[0].children[0].children[1].value = el.variable.type;
+            this.refreshView();
 
-        let lr = this.settingsBoxDOM.children[0].children[6].children[0]
-            .children[1].value;
-        if (isNaN(lr) || parseFloat(lr) < 0)
-            return this.renderError(
-                'Must provide positive numeric learning rate.'
-            );
+            if (el.variable.type === 'Scalar') {
+                el.children[1].children[0].children[1].value = el.variable.data ? el.variable.data : '';
+            } else if (el.variable.type === 'Vector') {
+                el.children[1].children[0].children[1].value = el.variable.length;
+            } else {
+                el.children[1].children[0].children[1].value = el.variable.shape[0];
+                el.children[1].children[0].children[2].value = el.variable.shape[1];
+            }
+        }
+    }
 
-        this.settings['learningRate'] = parseFloat(lr);
+    setSettings() {
+        this.settingsBoxDOM.children[0].children[1].children[0].children[1].value = this.settings.granularity;
+
+        this.settingsBoxDOM.children[0].children[2].children[0].children[0].checked = this.settings.showPath;
+
+        this.settingsBoxDOM.children[0].children[3].children[0].children[0].checked = this.settings.usePCA;
+
+        this.settingsBoxDOM.children[0].children[6].children[0].children[1].value = this.settings.learningRate;
+
+        this.settingsBoxDOM.children[0].children[5].children[0].value = this.settings.optimizer;
+
+        this.refreshView();
 
         if (this.settings['optimizer'] === 'Momentum') {
-            let momentum = this.settingsBoxDOM.children[0].children[7]
-                .children[0].children[1].value;
-            if (isNaN(momentum) || parseFloat(momentum) < 0)
-                return this.renderError(
-                    'Must provide positive numeric momentum.'
-                );
-            this.settings['momentum'] = parseFloat(momentum);
-        } else delete this.settings.momentum;
+            this.settingsBoxDOM.children[0].children[7].children[0].children[1].value = this.settings.momentum;
+        }
 
-        let epochs = this.settingsBoxDOM.children[0].children[
+        this.settingsBoxDOM.children[0].children[
             this.settings['optimizer'] === 'Momentum' ? 8 : 7
-        ].children[0].children[1].value;
+        ].children[0].children[1].value = this.settings.epochs;
 
-        if (isNaN(epochs) || parseInt(epochs) < 0)
-            return this.renderError(
-                'Must provide positive integer number of epochs.'
-            );
-        this.settings['epochs'] = parseInt(epochs);
-
-        return this.settings;
     }
+
+    setExpression(expression) {
+        this.expressionSourceDOM.value = expression;
+        this.expressionSourceDOM.dispatchEvent(new Event('input'));
+    }
+
 }
 
 export default new UI();
