@@ -113,12 +113,25 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
     let aMin = Math.min(...pathPositions.map(p => p[0]));
     let bMax = Math.max(...pathPositions.map(p => p[1]));
 
-    // Square
-    const maxStretch = Math.max(Math.abs(aMin), Math.abs(bMin), Math.abs(aMax), Math.abs(bMax));
-    aMin = -maxStretch;
-    bMin = -maxStretch;
-    aMax = maxStretch;
-    bMax = maxStretch;
+    // Turn the dimensions into a square centered around optimum
+    // const maxStretch = Math.max(Math.abs(aMin), Math.abs(bMin), Math.abs(aMax), Math.abs(bMax));
+    // aMin = -maxStretch;
+    // bMin = -maxStretch;
+    // aMax = maxStretch;
+    // bMax = maxStretch;
+
+    // Turn the dimensions into a square
+    const aDiff = aMax - aMin;
+    const bDiff = bMax - bMin;
+    if (aDiff > bDiff) {
+        const extraBPadding = (aDiff - bDiff) / 2;
+        bMin -= extraBPadding;
+        bMax += extraBPadding;
+    } else {
+        const extraAPadding = (bDiff - aDiff) / 2;
+        aMin -= extraAPadding;
+        aMax += extraAPadding;
+    }
 
     const aStepSize = (aMax - aMin) / granularity;
     const bStepSize = (bMax - bMin) / granularity;
@@ -130,11 +143,11 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
     bMax += bStepSize * 2;
 
     const lossSurface = [];
-    for (let a = aMin; a <= aMax; a += aStepSize) {
+    for (let a = aMin; a <= aMax + .001; a += aStepSize) {
         const rowLosses = [];
         lossSurface.push(rowLosses);
 
-        for (let b = bMin; b <= bMax; b += bStepSize) {
+        for (let b = bMin; b <= bMax + .001; b += bStepSize) {
             // console.assert(a >= -1 && a <= 1 && b >= -1 && b <= 1);
 
             await reportLossSurfaceGenerationProgress("Generating Loss Surface", evalIndex / (((aMax - aMin) / aStepSize) * (bMax - bMin) / bStepSize));
@@ -245,6 +258,8 @@ async function test() {
         layers: [
             //784
             tf.layers.dense({ inputShape: [78], units: 10, activation: 'relu' }),
+            tf.layers.dense({ inputShape: [78], units: 10, activation: 'sigmoid' }),
+            tf.layers.dense({ inputShape: [78], units: 10, activation: 'relu6' }),
             tf.layers.dense({ units: 10, activation: 'softmax' }),
         ]
     });

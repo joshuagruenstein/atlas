@@ -311,7 +311,7 @@ export const settingsBox = (settings, changeOptimizer) => html`
         <li class="menu-item pt-2 pb-2">
             <div class="input-group">
                 <span class="input-group-addon ">Epochs</span>
-                <input class="form-input" type="number" size="2" value="50" />
+                <input class="form-input" type="number" size="2" value="500" />
             </div>
         </li>
     </ul>
