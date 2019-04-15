@@ -59,15 +59,31 @@ async function randomNormalizedWeightVector(model) {
     const normalizedParts = [];
 
     for (const tensor of model.getWeights()) {
-        const shape = tensor.flatten().shape;
-
-        const randomVector = tf.randomNormal(shape);
+        const shape = tensor.shape;
+        const flattenedShape = tensor.flatten().shape;
 
         // Rescale parameters as in section 4 Proposed Visualization: Filter-Wise Normalization of the paper.
-        // TODO: Why didn't 'fro' work?
-        const scaling = (await tf.norm(tensor, 'euclidean').div(tf.norm(randomVector, 'euclidean')).data())[0];
+        // TODO: This = frobeneus, right?
+        // TODO: Scaling separately for each output neuron
+        
+        if (shape.length == 2) { 
+            for (let i = 0; i < shape[1] ; i ++) {
+                // Do each output neuron separately
+                const tensorPart = tf.slice2d(tensor, [0, i], [shape[0], 1]);
+                const randomVector = tf.randomNormal(tensorPart.flatten().shape); // Flatten to turn it into a 1D rather than 2D
+                
+                const scaling = (await tf.norm(tensorPart, 'euclidean').div(tf.norm(randomVector, 'euclidean')).data())[0];
+                normalizedParts.push(randomVector.mul(scaling));
+            }
+        } else {
+            // TODO: Should we be normalizing these biases?
+            const randomVector = tf.randomNormal(flattenedShape);
 
-        normalizedParts.push(randomVector.mul(scaling));
+            const scaling = (await tf.norm(tensor, 'euclidean').div(tf.norm(randomVector, 'euclidean')).data())[0];
+            normalizedParts.push(randomVector.mul(scaling));
+        }
+
+        // normalizedParts.push(randomVector);
     }
 
     return tf.concat(normalizedParts);
@@ -98,20 +114,20 @@ async function loadModelWeighWeightVector(model, weightVector) {
  */
 async function computeLossSurface(model, data, labels, optimalWeightVector, randomWeightVectorA, randomWeightVectorB, granularity = 10, pathPositions = null) {
     let evalIndex = 0;
+    let aMax, aMin, bMax, bMin;
 
-    // TODO: Fix no pathPositions
-    
     // // Stretching
-    // let aMin = Math.min(-1, Math.min(...pathPositions.map(x => x[0])));
-    // let aMax = Math.max(1, Math.max(...pathPositions.map(x => x[0])));
-    // let bMin = Math.min(-1, Math.min(...pathPositions.map(x => x[1])));
-    // let bMax = Math.max(1, Math.max(...pathPositions.map(x => x[1])));
+    // const SQUARE_SIZE = 10; // TODO: This is arbitrary
+    // aMin = Math.min(-SQUARE_SIZE, Math.min(...pathPositions.map(x => x[0])));
+    // aMax = Math.max(SQUARE_SIZE, Math.max(...pathPositions.map(x => x[0])));
+    // bMin = Math.min(-SQUARE_SIZE, Math.min(...pathPositions.map(x => x[1])));
+    // bMax = Math.max(SQUARE_SIZE, Math.max(...pathPositions.map(x => x[1])));
 
     // Fit exactly to points
-    let aMax = Math.max(...pathPositions.map(p => p[0]));
-    let bMin = Math.min(...pathPositions.map(p => p[1]));
-    let aMin = Math.min(...pathPositions.map(p => p[0]));
-    let bMax = Math.max(...pathPositions.map(p => p[1]));
+    aMax = Math.max(...pathPositions.map(p => p[0]));
+    bMin = Math.min(...pathPositions.map(p => p[1]));
+    aMin = Math.min(...pathPositions.map(p => p[0]));
+    bMax = Math.max(...pathPositions.map(p => p[1]));
 
     // Turn the dimensions into a square centered around optimum
     // const maxStretch = Math.max(Math.abs(aMin), Math.abs(bMin), Math.abs(aMax), Math.abs(bMax));
@@ -121,33 +137,33 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
     // bMax = maxStretch;
 
     // Turn the dimensions into a square
-    const aDiff = aMax - aMin;
-    const bDiff = bMax - bMin;
-    if (aDiff > bDiff) {
-        const extraBPadding = (aDiff - bDiff) / 2;
-        bMin -= extraBPadding;
-        bMax += extraBPadding;
-    } else {
-        const extraAPadding = (bDiff - aDiff) / 2;
-        aMin -= extraAPadding;
-        aMax += extraAPadding;
-    }
+    // const aDiff = aMax - aMin;
+    // const bDiff = bMax - bMin;
+    // if (aDiff > bDiff) {
+    //     const extraBPadding = (aDiff - bDiff) / 2;
+    //     bMin -= extraBPadding;
+    //     bMax += extraBPadding;
+    // } else {
+    //     const extraAPadding = (bDiff - aDiff) / 2;
+    //     aMin -= extraAPadding;
+    //     aMax += extraAPadding;
+    // }
 
     const aStepSize = (aMax - aMin) / granularity;
     const bStepSize = (bMax - bMin) / granularity;
 
-    aMin -= aStepSize * 2;
+    aMin -= aStepSize;
     aMax += aStepSize * 2;
 
-    bMin -= bStepSize * 2;
+    bMin -= bStepSize;
     bMax += bStepSize * 2;
 
     const lossSurface = [];
-    for (let a = aMin; a <= aMax + .001; a += aStepSize) {
+    for (let a = aMin; a < aMax; a += aStepSize) {
         const rowLosses = [];
         lossSurface.push(rowLosses);
 
-        for (let b = bMin; b <= bMax + .001; b += bStepSize) {
+        for (let b = bMin; b < bMax; b += bStepSize) {
             // console.assert(a >= -1 && a <= 1 && b >= -1 && b <= 1);
 
             await reportLossSurfaceGenerationProgress("Generating Loss Surface", evalIndex / (((aMax - aMin) / aStepSize) * (bMax - bMin) / bStepSize));
@@ -254,12 +270,25 @@ async function test() {
         return;
     }
 
+    class MyCustomLayer extends tf.layers.Layer {
+
+        constructor(config) {
+            super(config);
+        }
+
+        apply(x){
+            return tf.sin(x);
+        }
+    }
+    MyCustomLayer.className = 'MyCustomLayer';
+    tf.serialization.registerClass(MyCustomLayer);
+
     const model = tf.sequential({
         layers: [
             //784
-            tf.layers.dense({ inputShape: [78], units: 10, activation: 'relu' }),
-            tf.layers.dense({ inputShape: [78], units: 10, activation: 'sigmoid' }),
-            tf.layers.dense({ inputShape: [78], units: 10, activation: 'relu6' }),
+            tf.layers.dense({ inputShape: [78], units: 3, activation: 'sigmoid' }),
+            // tf.layers.dense({ inputShape: [78], units: 10, activation: 'sigmoid' }),
+            // tf.layers.dense({ inputShape: [78], units: 10, activation: 'relu6' }),
             tf.layers.dense({ units: 10, activation: 'softmax' }),
         ]
     });
