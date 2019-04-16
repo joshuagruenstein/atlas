@@ -59,6 +59,14 @@ export async function generateLossSurfaceFromUI(trainableVariables, lossFunction
             lossData.pathPositions.map(el => el[0])
         );
 
+        else if (lossData.lossSurface.every(row => (
+            row.every(el => el === row[0])
+        ))) UI.setVisualizerPlotLine(
+            [...Array(lossData.lossSurface.length).keys()],
+            lossData.lossSurface.map(row => row[0]),
+            lossData.pathPositions.map(el => el[1])
+        );
+
         else UI.setVisualizerPlotSurface(
             lossData.lossSurface,
             lossData.pathPositions
