@@ -38,6 +38,7 @@ function makeTfNumber(v) {
     return tf.scalar(parseFloat(v));
 }
 
+if(true) {
 UI.setVisualizerStartHandler(() => {
     let varContext = makeVarContext();
     let tokens = Array.from(moo.compile({
@@ -57,7 +58,7 @@ UI.setVisualizerStartHandler(() => {
     console.log(f);
     generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
 });
-
+}
 // UI.setVisualizerCancelHandler(() => {
 //     UI.setVisualizerStart();
 // });
