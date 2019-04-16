@@ -19,10 +19,10 @@ scalarSum -> scalarSum %tokenPlus scalarProduct {% ([fst, _, snd]) => tf.add(fst
 scalarProduct -> scalarProduct %tokenTimes scalar {% ([fst, _, snd]) => tf.mul(fst, snd) %}
     | scalarProduct scalar {% ([fst, snd]) => tf.mul(fst, snd) %}
     | scalar {% id %}
-scalar -> %tokenScalar {% (s) => s[0].value.tfvar %}
-    | %tokenNumber {% (n) => getTfNumber(n[0].value) %}
+scalar -> %tokenScalar {% ([s]) => s.value.tfvar %}
+    | %tokenNumber {% ([n]) => getTfNumber(n.value) %}
     | %tokenNormsign vectorSum %tokenNormsign {% ([l, v, r]) => tf.norm(v) %}
-    | %tokenNormsign matrixSum %tokenNormsign {% ([l, v, r]) => tf.norm(v) %}
+    | %tokenNormsign matrixSum %tokenNormsign {% ([l, m, r]) => tf.norm(m) %}
 vectorSum -> vectorSum %tokenPlus vectorProduct {% ([fst, _, snd]) => tf.add(fst, snd) %}
     | vectorProduct {% id %}
 vectorProduct -> vectorProduct %tokenTimes vector {% ([fst, _, snd]) => tf.mul(fst, snd) %}
@@ -33,6 +33,6 @@ matrixSum -> matrixSum %tokenPlus matrixProduct {% ([fst, _, snd]) => tf.add(fst
 matrixProduct -> matrixProduct %tokenTimes matrix {% ([fst, _, snd]) => tf.mul(fst, snd) %}
     | matrixProduct matrix {% ([fst, snd]) => tf.mul(fst, snd) %}
     | matrix {% id %}
-vector -> %tokenVector {% (s) => s[0].value.tfvar %}
-matrix -> %tokenMatrix {% (s) => s[0].value.tfvar %}
+vector -> %tokenVector {% ([v]) => v.value.tfvar %}
+matrix -> %tokenMatrix {% ([m]) => m.value.tfvar %}
 
