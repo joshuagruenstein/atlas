@@ -1,6 +1,6 @@
 import UI from "./ui.js";
 import "./loss_surface_generation.js";
-import nearly from "./nearly.js";
+import nearly from "./libraries/nearly.js";
 import './grammar.js';
 
 function getVariable(varName) {
