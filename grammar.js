@@ -11,17 +11,19 @@ function id(x) { return x[0]; }
     const tokenTimes = {test: x => x.type === 'times'};
     const tokenNormsign = {test: x => x.type === 'normsign'};
     const tokenNumber = {test: x => x.type === 'number'};
-
+    const tokenMinus = {test: x => x.type === 'minus'};
 var grammar = {
     Lexer: undefined,
     ParserRules: [
     {"name": "scalarExpression", "symbols": ["scalarSum"], "postprocess": id},
     {"name": "scalarSum", "symbols": ["scalarSum", tokenPlus, "scalarProduct"], "postprocess": ([fst, _, snd]) => (() => tf.add(fst(), snd()))},
+    {"name": "scalarSum", "symbols": ["scalarSum", tokenMinus, "scalarProduct"], "postprocess": ([fst, _, snd]) => (() => tf.add(fst(), -snd()))},
     {"name": "scalarSum", "symbols": ["scalarProduct"], "postprocess": id},
     {"name": "scalarProduct", "symbols": ["scalarProduct", tokenTimes, "scalar"], "postprocess": ([fst, _, snd]) => (() => tf.mul(fst(), snd()))},
     {"name": "scalarProduct", "symbols": ["scalarProduct", "scalar"], "postprocess": ([fst, snd]) => (() => tf.mul(fst(), snd()))},
     {"name": "scalarProduct", "symbols": ["scalar"], "postprocess": id},
     {"name": "scalar", "symbols": [tokenScalar], "postprocess": ([s]) => (() => s.value.tfvar)},
+    {"name": "scalar", "symbols": [tokenMinus, "scalar"], "postprocess": ([_, s]) => (() => {console.log(s); return tf.sub(tf.scalar(0),s())})},
     {"name": "scalar", "symbols": [tokenNumber], "postprocess": ([n]) => (() => n.value)},
     {"name": "scalar", "symbols": [tokenNormsign, "vectorSum", tokenNormsign], "postprocess": ([l, v, r]) => (() => tf.norm(v()))},
     {"name": "scalar", "symbols": [tokenNormsign, "matrixSum", tokenNormsign], "postprocess": ([l, m, r]) => (() => tf.norm(m()))},

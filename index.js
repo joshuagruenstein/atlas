@@ -43,11 +43,20 @@ UI.setVisualizerStartHandler(() => {
     let usedVars = {};
     let tokens = Array.from(moo.compile({
         WS: /[ \t]+/,
+        power: /\^/,
+        transpose: /T/,
+        lparen: /\(/,
+        rparen: /\)/,
+        relu: /relu/,
+        onehot: /onehot/,
+        underscore: /_/,
+        comma: /,/,
         variable: {match: /[a-zA-Z]/, value: v => getVariable(v, varContext, usedVars)},
         plus: /\+/,
+        minus: /\-/,
         times: /\*/,
         normsign: /\|\|/,
-        number: {match: /[1-9][0-9]*/, value: v => makeTfNumber(v)},
+        number: {match: /[0-9]+/, value: v => makeTfNumber(v)},
     }).reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
     console.log(tokens);
     let tfvars = Object.keys(usedVars).filter((v, i, a) => usedVars[v].match).map((v, i, a) => usedVars[v].tfvar);
@@ -55,6 +64,7 @@ UI.setVisualizerStartHandler(() => {
     const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
     parser.feed(tokens);
     const f = parser.results[0];
+    console.log(f())
     generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
 });
 }

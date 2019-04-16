@@ -7,16 +7,18 @@
     const tokenTimes = {test: x => x.type === 'times'};
     const tokenNormsign = {test: x => x.type === 'normsign'};
     const tokenNumber = {test: x => x.type === 'number'};
-
+    const tokenMinus = {test: x => x.type === 'minus'};
 %}
 
 scalarExpression -> scalarSum {% id %}
 scalarSum -> scalarSum %tokenPlus scalarProduct {% ([fst, _, snd]) => (() => tf.add(fst(), snd())) %}
+    | scalarSum %tokenMinus scalarProduct {% ([fst, _, snd]) => (() => tf.add(fst(), -snd())) %}
     | scalarProduct {% id %}
 scalarProduct -> scalarProduct %tokenTimes scalar {% ([fst, _, snd]) => (() => tf.mul(fst(), snd())) %}
     | scalarProduct scalar {% ([fst, snd]) => (() => tf.mul(fst(), snd())) %}
     | scalar {% id %}
 scalar -> %tokenScalar {% ([s]) => (() => s.value.tfvar) %}
+    | %tokenMinus scalar {% ([_, s]) => (() => {console.log(s); return tf.sub(tf.scalar(0),s())}) %}
     | %tokenNumber {% ([n]) => (() => n.value) %}
     | %tokenNormsign vectorSum %tokenNormsign {% ([l, v, r]) => (() => tf.norm(v())) %}
     | %tokenNormsign matrixSum %tokenNormsign {% ([l, m, r]) => (() => tf.norm(m())) %}
