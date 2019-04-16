@@ -9,6 +9,54 @@ var running = false;
 var cancel = false;
 
 /**
+ * Accepts a {lossFunction} with {trainableVariables} and generates a loss surface plot
+ * for it, according to the {SETTINGS} from the UI.
+ */
+export async function generateLossSurfaceFromUI(trainableVariables, lossFunction, SETTINGS) {
+    if (!SETTINGS) {
+        alert("Invalid settings!");
+        return;
+    }
+
+    const model =
+    {
+        getWeights: function () {
+            return trainableVariables;
+        },
+        setWeights: function (weights) {
+            for (const i in trainableVariables) {
+                trainableVariables[i].assign(weights[i]);
+            }
+        },
+        evaluate: function () {
+            return lossFunction();
+        }
+    };
+
+    // TODO: Remove the need for this data and labels
+    const data = 1;
+    const labels = 1;
+
+    const lossData = await generateLossSurface(
+        model,
+        data,
+        labels,
+        SETTINGS["usePCA"],
+        SETTINGS["showPath"],
+        SETTINGS["granularity"],
+        SETTINGS
+    );
+
+    await reportLossSurfaceGenerationProgress("All done! :) ", 1);
+
+    if (lossData && lossData.lossSurface) {
+        UI.setVisualizerPlotSurface(lossData.lossSurface, lossData.pathPositions);
+    } else {
+        UI.setVisualizerStart();
+    }
+}
+
+/**
  * Generates a loss surface for our {model} on some {data} with {labels}.
  * First trains the model, then generates random vectors, then computes the weight surface.
  */
@@ -125,11 +173,11 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
     let aMax, aMin, bMax, bMin;
 
     // // Stretching
-    const lossSurfaceDimensions = "square_around_optimum_scaled_to_trajectory";
+    const lossSurfaceDimensions = "square_around_optimum";
 
     switch (lossSurfaceDimensions) {
         case "square_around_optimum":
-            const SQUARE_SIZE = 1; // TODO: This is arbitrary
+            const SQUARE_SIZE = 1;0 // TODO: This is arbitrary
             aMin = Math.min(-SQUARE_SIZE, Math.min(...pathPositions.map(x => x[0])));
             aMax = Math.max(SQUARE_SIZE, Math.max(...pathPositions.map(x => x[0])));
             bMin = Math.min(-SQUARE_SIZE, Math.min(...pathPositions.map(x => x[1])));
