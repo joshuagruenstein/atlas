@@ -71,6 +71,8 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
     let normalizedA, normalizedB;
+    UI.renderSuccess(optimalWeightVector.shape);
+
     if (optimalWeightVector.shape[0] == 1) {
         UI.renderSuccess("1");
         normalizedA = tf.tensor([1]);
@@ -339,8 +341,6 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
 
     for (let epoch = 0; epoch < learningParameters["epochs"]; epoch += 1) {
         const loss = await optimizer.minimize(model.evaluate, true, model.getWeights()).data();
-
-        console.log('Loss', loss);  // TODO: Wire this up to UI
 
         await reportLossSurfaceGenerationProgress("Training model", epoch / learningParameters["epochs"]);
         if (runPCA || showPath) {
