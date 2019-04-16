@@ -178,7 +178,7 @@ export const variable = (
         ${variable.type !== 'Scalar'
             ? html`
                   <li class="menu-item">
-                      <a href="#" @click=${() => csvVariable(variable)}>
+                      <a @click=${() => csvVariable(variable)}>
                           <i class="icon icon-apps"></i> Set Value From CSV
                       </a>
                   </li>
@@ -196,7 +196,6 @@ export const variable = (
 
         <li class="menu-item">
             <a
-                href="#"
                 class="text-error"
                 @click=${() => deleteVariable(variable)}
             >
@@ -229,7 +228,7 @@ export const variableBox = (
 
     <ul class="menu text-primary mt-2 mb-2" style="width:250px">
         <li class="menu-item">
-            <a href="#" @click=${newVariable}>
+            <a @click=${newVariable}>
                 <i class="icon icon-plus"></i> New Variable
             </a>
         </li>
