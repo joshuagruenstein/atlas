@@ -66,10 +66,14 @@ UI.setVisualizerStartHandler(() => {
     let tfvars = Object.keys(usedVars).filter((v, i, a) => usedVars[v].match).map((v, i, a) => usedVars[v].tfvar);
     console.log(tfvars);
     const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
-    parser.feed(tokens);
-    const f = parser.results[0];
-    console.log(f())
-    generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
+    try {
+        parser.feed(tokens);
+        const f = parser.results[0];
+        generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
+    }
+    catch (err) {
+        UI.renderError("Invalid syntax. Are you sure all variables are declared and your final expression is a scalar?")
+    }
 });
 }
 // UI.setVisualizerCancelHandler(() => {
