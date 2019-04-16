@@ -12,6 +12,12 @@
     const tokenLparen = {test: x => x.type === 'lparen'};
     const tokenRparen = {test: x => x.type === 'rparen'};
     const tokenRelu = {test: x => x.type === 'relu'};
+    const tokenSin = {test: x => x.type === 'sin'};
+    const tokenCos = {test: x => x.type === 'cos'};
+    const tokenSigmoid = {test: x => x.type === 'sigmoid'};
+    const tokenTanh = {test: x => x.type === 'tanh'};
+    const tokenSqrt = {test: x => x.type === 'sqrt'};
+    const tokenAbs = {test: x => x.type === 'abs'};
     const tokenOnehot = {test: x => x.type === 'onehot'};
     const tokenUnderscore = {test: x => x.type === 'underscore'};
     const tokenComma = {test: x => x.type === 'comma'};
@@ -36,7 +42,13 @@ sAS -> sAS %tokenPlus sMD {% ([fst, _, snd]) => (() => tf.add(fst(), snd())) %}
     | sMD {% id %}
 
 s -> %tokenScalar {% ([s]) => (() => s.value.tfvar) %}
-    | %tokenRelu %tokenLparen sAS %tokenRparen {% ([relu, l, s, r]) => (() => tf.relu(s())) %}
+    | %tokenRelu %tokenLparen sAS %tokenRparen {% ([f, l, s, r]) => (() => tf.relu(s())) %}
+    | %tokenSin %tokenLparen sAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sin(s())) %}
+    | %tokenCos %tokenLparen sAS %tokenRparen {% ([f, l, s, r]) => (() => tf.cos(s())) %}
+    | %tokenSigmoid %tokenLparen sAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sigmoid(s())) %}
+    | %tokenTanh %tokenLparen sAS %tokenRparen {% ([f, l, s, r]) => (() => tf.tanh(s())) %}
+    | %tokenSqrt %tokenLparen sAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sqrt(s())) %}
+    | %tokenAbs sAS %tokenAbs {% ([l, s, r]) => (() => tf.abs(s())) %}
     | %tokenNorm mAS %tokenNorm %tokenUnderscore %tokenNumber {% ([l, m, r, u, o]) => (() => tf.norm(m(), parseFloat(o.value))) %}
     | %tokenNumber {% ([n]) => (() => parseFloat(n.value)) %}
 
@@ -63,5 +75,10 @@ mAS -> mAS %tokenPlus smMD {% ([fst, _, snd]) => (() => tf.add(fst(), snd())) %}
     | smMD {% id %}
 
 m -> %tokenMatrix {% ([m]) => (() => m.value.tfvar) %}
-    | %tokenRelu %tokenLparen mAS %tokenRparen {% ([relu, l, m, r]) => (() => tf.relu(m())) %}
-
+    | %tokenRelu %tokenLparen mAS %tokenRparen {% ([f, l, m, r]) => (() => tf.relu(m())) %}
+    | %tokenSin %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sin(m())) %}
+    | %tokenCos %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.cos(m())) %}
+    | %tokenSigmoid %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sigmoid(m())) %}
+    | %tokenTanh %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.tanh(m())) %}
+    | %tokenSqrt %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sqrt(s())) %}
+    | %tokenAbs mAS %tokenAbs {% ([l, s, r]) => (() => tf.abs(s())) %}
