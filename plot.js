@@ -74,7 +74,7 @@ class Plot {
         if (path) {
             const scaledPath = path.map(p => [
                 p[0] * data[0].length,
-                p[1] * data.length
+                p[1] * data.length,
             ]);
 
             const zOffset =
@@ -117,8 +117,6 @@ class Plot {
 
         const neighborX = Math.floor(xScaled);
         const neighborY = Math.floor(yScaled);
-
-        console.log({ neighborX, neighborY });
 
         const neighborZ = data[neighborY][neighborX];
 
