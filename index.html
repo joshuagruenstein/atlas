@@ -60,43 +60,10 @@
     </div>
 </div>
 
-
+<script type="module" src="index.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=AM_CHTML"></script>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script src="libraries/moo.js"></script>
-
-<script>
-window.MathJax = {
-    AuthorInit: function() {
-        MathJax.Hub.Register.StartupHook('End', function() {
-            MathJax.Hub.processSectionDelay = 0;
-            let expressionSource = document.getElementById('expressionSource');
-            let expressionRendering = document.getElementById('expressionRendering');
-            let math = MathJax.Hub.getAllJax('expressionRendering')[0];
-            expressionSource.addEventListener('input', function() {
-                MathJax.Hub.Queue(['Text', math, expressionSource.value]);
-            });
-
-            window.MathJaxInitialized = true;
-        });
-
-        MathJax.Hub.Register.StartupHook('AsciiMath Jax Ready', function () {
-            let AM = MathJax.InputJax.AsciiMath.AM;
-
-            AM.newsymbol({
-                input:'relu',
-                tag:'mi',
-                output:'relu',
-                tex:null,
-                ttype:AM.TOKEN.UNARY,
-                func:true
-            });
-        });
-    }
-}
-</script>
-
-<script type="module" src="index.js"></script>
 
 </body>
 </html>

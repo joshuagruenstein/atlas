@@ -1,11 +1,10 @@
 import UI from "./ui.js";
-import "./loss_surface_generation.js";
+import { generateLossSurfaceFromUI } from "./loss_surface_generation.js";
 import nearly from "./libraries/nearly.js";
 import './grammar.js';
 
 function getVariable(varName) {
     let vars = UI.getVariables();
-    console.log(vars);
     let match = null;
     let tfvar = null;
     vars.forEach((v, i) => {
@@ -31,7 +30,7 @@ function makeTfVar(v) {
 }
 
 UI.setOnloadHandler(() => {
-    UI.renderSuccess('PLS SVAE ME I AM STUCK ISN THE COMPUTER HELEPLEPLEPL.');
+    UI.renderSuccess("GET BORPED SON");
 });
 
 UI.setVisualizerStartHandler(() => {
@@ -50,6 +49,7 @@ UI.setVisualizerStartHandler(() => {
     parser.feed(tokens);
     const f = () => parser.results[0];
     console.log(f());
+    generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
 });
 
 // UI.setVisualizerCancelHandler(() => {
