@@ -3,17 +3,23 @@ import { generateLossSurfaceFromUI } from "./loss_surface_generation.js";
 import nearly from "./libraries/nearly.js";
 import './grammar.js';
 
-function getVariable(varName) {
+function makeVarContext() {
     let vars = UI.getVariables();
-    let match = null;
-    let tfvar = null;
-    vars.forEach((v, i) => {
-        if (v.name === varName) {
-            match = v;
-            tfvar = makeTfVar(v);
-        }
-    });
-    return {match: match, tfvar: tfvar};
+    let tfvars = vars.map((v, i, a) => ({match: v, tfvar: makeTfVar(v)}));
+    let x = {1:2};
+
+    return Object.assign(...tfvars.map(
+            (v, i, a) => {
+                let k = {};
+                k[v.match.name] = v;
+                return k;
+            }
+        ));
+}
+
+function getVariable(varName, varContext) {
+    let c = varContext[varName];
+    return {match: c.match, tfvar: c.tfvar};
 }
 
 function makeTfVar(v) {
@@ -33,9 +39,10 @@ function makeTfNumber(v) {
 }
 
 UI.setVisualizerStartHandler(() => {
+    let varContext = makeVarContext();
     let tokens = Array.from(moo.compile({
         WS: /[ \t]+/,
-        variable: {match: /[a-zA-Z]/, value: v => getVariable(v)},
+        variable: {match: /[a-zA-Z]/, value: v => getVariable(v, varContext)},
         plus: /\+/,
         times: /\*/,
         normsign: /\|\|/,
