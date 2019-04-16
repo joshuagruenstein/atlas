@@ -26,15 +26,12 @@ function makeTfVar(v) {
         case "Scalar":
             return v.trainable ? tf.scalar(Math.random()).variable() : tf.scalar(v.data);
         case "Vector":
-            return v.trainable ? tf.randomUniform([v.length]).variable() : tf.tensor1d(v.data);
+            return v.trainable ? tf.randomUniform([v.length, 1]).variable() : tf.tensor1d(v.data).reshape([v.length, 1]);
         case "Matrix":
             return v.trainable ? tf.randomUniform(v.shape).variable() : tf.tensor2d(v.data);
         default:
             return null;
     }
-}
-function makeTfNumber(v) {
-    return tf.scalar(parseFloat(v));
 }
 
 if(true) {
@@ -42,7 +39,7 @@ UI.setVisualizerStartHandler(() => {
     let varContext = makeVarContext();
     let usedVars = {};
     let tokens = Array.from(moo.compile({
-        WS: /[ \t]+/,
+        WS: /[\t]+/,
         power: /\^/,
         transpose: /T/,
         lparen: /\(/,
@@ -53,10 +50,11 @@ UI.setVisualizerStartHandler(() => {
         comma: /,/,
         variable: {match: /[a-zA-Z]/, value: v => getVariable(v, varContext, usedVars)},
         plus: /\+/,
-        minus: /\-/,
+        minus: /-/,
         times: /\*/,
-        normsign: /\|\|/,
-        number: {match: /[0-9]+/, value: v => makeTfNumber(v)},
+        divides: /\//,
+        norm: /\|\|/,
+        number: {match: /[0-9]+/, value: v => v},
     }).reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
     console.log(tokens);
     let tfvars = Object.keys(usedVars).filter((v, i, a) => usedVars[v].match).map((v, i, a) => usedVars[v].tfvar);

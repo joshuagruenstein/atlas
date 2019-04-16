@@ -3,44 +3,63 @@
 (function () {
 function id(x) { return x[0]; }
 
-
     const tokenScalar = {test: x => x.type === 'variable' && x.value.match !== null && x.value.match.type === 'Scalar'};
-    const tokenVector = {test: x => x.type === 'variable' && x.value.match !== null && x.value.match.type === 'Vector'};
-    const tokenMatrix = {test: x => x.type === 'variable' && x.value.match !== null && x.value.match.type === 'Matrix'};
+    const tokenMatrix = {test: x => x.type === 'variable' && x.value.match !== null && (x.value.match.type === 'Matrix' || x.value.match.type === 'Vector')};
     const tokenPlus = {test: x => x.type === 'plus'};
     const tokenTimes = {test: x => x.type === 'times'};
-    const tokenNormsign = {test: x => x.type === 'normsign'};
+    const tokenDivides = {test: x => x.type === 'divides'};
+    const tokenNorm = {test: x => x.type === 'norm'};
     const tokenNumber = {test: x => x.type === 'number'};
     const tokenMinus = {test: x => x.type === 'minus'};
+    const tokenPower = {test: x => x.type === 'power'};
+    const tokenTranspose = {test: x => x.type === 'transpose'};
+    const tokenLparen = {test: x => x.type === 'lparen'};
+    const tokenRparen = {test: x => x.type === 'rparen'};
+    const tokenRelu = {test: x => x.type === 'relu'};
+    const tokenOnehot = {test: x => x.type === 'onehot'};
+    const tokenUnderscore = {test: x => x.type === 'underscore'};
+    const tokenComma = {test: x => x.type === 'comma'};
 var grammar = {
     Lexer: undefined,
     ParserRules: [
-    {"name": "scalarExpression", "symbols": ["scalarSum"], "postprocess": id},
-    {"name": "scalarSum", "symbols": ["scalarSum", tokenPlus, "scalarProduct"], "postprocess": ([fst, _, snd]) => (() => tf.add(fst(), snd()))},
-    {"name": "scalarSum", "symbols": ["scalarSum", tokenMinus, "scalarProduct"], "postprocess": ([fst, _, snd]) => (() => tf.add(fst(), -snd()))},
-    {"name": "scalarSum", "symbols": ["scalarProduct"], "postprocess": id},
-    {"name": "scalarProduct", "symbols": ["scalarProduct", tokenTimes, "scalar"], "postprocess": ([fst, _, snd]) => (() => tf.mul(fst(), snd()))},
-    {"name": "scalarProduct", "symbols": ["scalarProduct", "scalar"], "postprocess": ([fst, snd]) => (() => tf.mul(fst(), snd()))},
-    {"name": "scalarProduct", "symbols": ["scalar"], "postprocess": id},
-    {"name": "scalar", "symbols": [tokenScalar], "postprocess": ([s]) => (() => s.value.tfvar)},
-    {"name": "scalar", "symbols": [tokenMinus, "scalar"], "postprocess": ([_, s]) => (() => {console.log(s); return tf.sub(tf.scalar(0),s())})},
-    {"name": "scalar", "symbols": [tokenNumber], "postprocess": ([n]) => (() => n.value)},
-    {"name": "scalar", "symbols": [tokenNormsign, "vectorSum", tokenNormsign], "postprocess": ([l, v, r]) => (() => tf.norm(v()))},
-    {"name": "scalar", "symbols": [tokenNormsign, "matrixSum", tokenNormsign], "postprocess": ([l, m, r]) => (() => tf.norm(m()))},
-    {"name": "vectorSum", "symbols": ["vectorSum", tokenPlus, "vectorProduct"], "postprocess": ([fst, _, snd]) => (() => (() => tf.add(fst(), snd())))},
-    {"name": "vectorSum", "symbols": ["vectorProduct"], "postprocess": id},
-    {"name": "vectorProduct", "symbols": ["vectorProduct", tokenTimes, "vector"], "postprocess": ([fst, _, snd]) => (() => tf.mul(fst(), snd()))},
-    {"name": "vectorProduct", "symbols": ["vectorProduct", "vector"], "postprocess": ([fst, snd]) => (() => tf.mul(fst(), snd()))},
-    {"name": "vectorProduct", "symbols": ["vector"], "postprocess": id},
-    {"name": "matrixSum", "symbols": ["matrixSum", tokenPlus, "matrixProduct"], "postprocess": ([fst, _, snd]) => (() => tf.add(fst(), snd()))},
-    {"name": "matrixSum", "symbols": ["matrixProduct"], "postprocess": id},
-    {"name": "matrixProduct", "symbols": ["matrixProduct", tokenTimes, "matrix"], "postprocess": ([fst, _, snd]) => (() => tf.mul(fst(), snd()))},
-    {"name": "matrixProduct", "symbols": ["matrixProduct", "matrix"], "postprocess": ([fst, snd]) => (() => tf.mul(fst(), snd()))},
-    {"name": "matrixProduct", "symbols": ["matrix"], "postprocess": id},
-    {"name": "vector", "symbols": [tokenVector], "postprocess": ([v]) => (() => v.value.tfvar)},
-    {"name": "matrix", "symbols": [tokenMatrix], "postprocess": ([m]) => (() => m.value.tfvar)}
+    {"name": "main", "symbols": ["sAS"], "postprocess": id},
+    {"name": "sP", "symbols": [tokenLparen, "sAS", tokenRparen], "postprocess": ([l, s, r]) => s},
+    {"name": "sP", "symbols": ["s"], "postprocess": id},
+    {"name": "sE", "symbols": ["sP", tokenPower, "sE"], "postprocess": ([fst, _, snd]) => (() => tf.pow(fst(), snd()))},
+    {"name": "sE", "symbols": ["sP"], "postprocess": id},
+    {"name": "sMD", "symbols": ["sMD", tokenTimes, "sE"], "postprocess": ([fst, _, snd]) => (() => tf.mul(fst(), snd()))},
+    {"name": "sMD", "symbols": ["sMD", tokenDivides, "sE"], "postprocess": ([fst, _, snd]) => (() => tf.div(fst(), snd()))},
+    {"name": "sMD", "symbols": ["sMD", "sE"], "postprocess": ([fst, snd]) => (() => tf.mul(fst(), snd()))},
+    {"name": "sMD", "symbols": ["sE"], "postprocess": id},
+    {"name": "sAS", "symbols": ["sAS", tokenPlus, "sMD"], "postprocess": ([fst, _, snd]) => (() => tf.add(fst(), snd()))},
+    {"name": "sAS", "symbols": ["sAS", tokenMinus, "sMD"], "postprocess": ([fst, _, snd]) => (() => tf.sub(fst(), snd()))},
+    {"name": "sAS", "symbols": [tokenMinus, "sMD"], "postprocess": ([_, snd]) => (() => tf.sub(0, snd()))},
+    {"name": "sAS", "symbols": ["sMD"], "postprocess": id},
+    {"name": "s", "symbols": [tokenScalar], "postprocess": ([s]) => (() => s.value.tfvar)},
+    {"name": "s", "symbols": [tokenRelu, tokenLparen, "sAS", tokenRparen], "postprocess": ([relu, l, s, r]) => (() => tf.relu(s()))},
+    {"name": "s", "symbols": [tokenNorm, "mAS", tokenNorm, tokenUnderscore, tokenNumber], "postprocess": ([l, m, r, u, o]) => (() => tf.norm(m(), parseFloat(o.value)))},
+    {"name": "s", "symbols": [tokenNumber], "postprocess": ([n]) => (() => parseFloat(n.value))},
+    {"name": "mP", "symbols": [tokenLparen, "mAS", tokenRparen], "postprocess": ([l, m, r]) => m},
+    {"name": "mP", "symbols": ["m"], "postprocess": id},
+    {"name": "mE", "symbols": ["mP", tokenPower, "sP"], "postprocess": ([fst, _, snd]) => (() => tf.pow(fst(), snd()))},
+    {"name": "mE", "symbols": ["mP", tokenPower, tokenTranspose], "postprocess": ([fst, _, t]) => (() => tf.transpose(fst()))},
+    {"name": "mE", "symbols": ["mP"], "postprocess": id},
+    {"name": "mMD", "symbols": ["mMD", tokenTimes, "mE"], "postprocess": ([fst, _, snd]) => (() => tf.matMul(fst(), snd()))},
+    {"name": "mMD", "symbols": ["mMD", "mE"], "postprocess": ([fst, snd]) => (() => tf.matMul(fst(), snd()))},
+    {"name": "mMD", "symbols": ["mE"], "postprocess": id},
+    {"name": "smMD", "symbols": ["sE", tokenTimes, "smMD"], "postprocess": ([fst, _, snd]) => (() => tf.mul(fst(), snd()))},
+    {"name": "smMD", "symbols": ["smMD", tokenTimes, "sE"], "postprocess": ([fst, _, snd]) => (() => tf.mul(fst(), snd()))},
+    {"name": "smMD", "symbols": ["smMD", tokenDivides, "sE"], "postprocess": ([fst, _, snd]) => (() => tf.div(fst(), snd()))},
+    {"name": "smMD", "symbols": ["sE", "smMD"], "postprocess": ([fst, snd]) => (() => tf.mul(fst(), snd()))},
+    {"name": "smMD", "symbols": ["mMD"], "postprocess": id},
+    {"name": "mAS", "symbols": ["mAS", tokenPlus, "smMD"], "postprocess": ([fst, _, snd]) => (() => tf.add(fst(), snd()))},
+    {"name": "mAS", "symbols": ["mAS", tokenMinus, "smMD"], "postprocess": ([fst, _, snd]) => (() => tf.sub(fst(), snd()))},
+    {"name": "mAS", "symbols": [tokenMinus, "smMD"], "postprocess": ([_, snd]) => (() => tf.sub(0, snd()))},
+    {"name": "mAS", "symbols": ["smMD"], "postprocess": id},
+    {"name": "m", "symbols": [tokenMatrix], "postprocess": ([m]) => (() => m.value.tfvar)},
+    {"name": "m", "symbols": [tokenRelu, tokenLparen, "mAS", tokenRparen], "postprocess": ([relu, l, m, r]) => (() => tf.relu(m()))}
 ]
-  , ParserStart: "scalarExpression"
+  , ParserStart: "main"
 }
 if (typeof module !== 'undefined'&& typeof module.exports !== 'undefined') {
    module.exports = grammar;
