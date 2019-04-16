@@ -30,6 +30,13 @@ class UI {
         this.expressionSourceDOM = document.getElementById("expressionSource");
 
         window.onload = onload => {
+            if (!document.cookie.split(';').filter(function(item) {
+                return item.trim().indexOf('visited=') == 0
+            }).length) {
+                this.showModal();
+                document.cookie = 'visited=true';
+            }
+
             this.setVisualizerStart();
             this.refreshView();
             this.onLoad();
