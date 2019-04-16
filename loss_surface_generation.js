@@ -69,11 +69,22 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
     }
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
-    const weightVectorA = runPCA ? trainData["pca"][0] : await randomNormalizedWeightVector(model);
-    const weightVectorB = runPCA ? trainData["pca"][1] : await randomNormalizedWeightVector(model);
+    let normalizedA, normalizedB;
+    if (optimalWeightVector.shape[0] == 1) {
+        UI.renderSuccess("1");
+        normalizedA = tf.tensor([1]);
+        normalizedB = tf.tensor([0]);
+    } else if (optimalWeightVector.shape[0] == 2){
+        UI.renderSuccess("2");
+        normalizedA = tf.tensor([1, 0]);
+        normalizedB = tf.tensor([0, 1]);
+    } else {
+        const weightVectorA = runPCA ? trainData["pca"][0] : await randomNormalizedWeightVector(model);
+        const weightVectorB = runPCA ? trainData["pca"][1] : await randomNormalizedWeightVector(model);
 
-    const normalizedA = weightVectorA.div(weightVectorA.norm(2));
-    const normalizedB = weightVectorB.div(weightVectorB.norm(2));
+        normalizedA = weightVectorA.div(weightVectorA.norm(2));
+        normalizedB = weightVectorB.div(weightVectorB.norm(2));
+    }     
 
     const pathPositions = showPath ? await computeWeightTrajectoryPositions(trainData["weightVectors"], optimalWeightVector, normalizedA, normalizedB) : null;
 
@@ -245,11 +256,11 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
     bMax += bStepSize * 2;
 
     const lossSurface = [];
-    for (let a = aMin; a < aMax; a += aStepSize) {
+    for (let b = bMin; b < bMax; b += bStepSize) {
         const rowLosses = [];
         lossSurface.push(rowLosses);
-
-        for (let b = bMin; b < bMax; b += bStepSize) {
+        
+        for (let a = aMin; a < aMax; a += aStepSize) {
             // console.assert(a >= -1 && a <= 1 && b >= -1 && b <= 1);
 
             await reportLossSurfaceGenerationProgress("Generating Loss Surface", evalIndex / (((aMax - aMin) / aStepSize) * (bMax - bMin) / bStepSize));
@@ -286,7 +297,9 @@ async function evaluateLossOnData(model, data, labels) {
     // console.log(modelOutput);
     // const t = model.evaluate(data, labels)[0];
     // return (await t.data())[0];
-    return (await modelOutput.data())[0];
+    const loss = (await modelOutput.data())[0];
+    // console.log(await Promise.all(model.getWeights().map(w => w.data())), loss);
+    return loss;
 }
 
 /**
@@ -387,8 +400,6 @@ async function test() {
     }
 
     const xs = tf.tensor2d([[0, 1, 2, 3]]).transpose();
-    // const ys = tf.tensor1d([1.1, 5.9, 16.8, 33.9]);
-
     const A = tf.variable(tf.randomNormal([1, 4]));
 
     // const a = tf.scalar(Math.random()).variable();
