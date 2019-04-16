@@ -90,14 +90,11 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
     let normalizedA, normalizedB;
-    UI.renderSuccess(optimalWeightVector.shape);
 
     if (optimalWeightVector.shape[0] == 1) {
-        UI.renderSuccess("1");
         normalizedA = tf.tensor([1]);
         normalizedB = tf.tensor([0]);
     } else if (optimalWeightVector.shape[0] == 2){
-        UI.renderSuccess("2");
         normalizedA = tf.tensor([1, 0]);
         normalizedB = tf.tensor([0, 1]);
     } else {

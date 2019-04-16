@@ -34,7 +34,6 @@ function makeTfVar(v) {
     }
 }
 
-if(true) {
 UI.setVisualizerStartHandler(() => {
     let varContext = makeVarContext();
     let usedVars = {};
@@ -75,7 +74,7 @@ UI.setVisualizerStartHandler(() => {
         UI.renderError("Invalid syntax. Are you sure all variables are declared and your final expression is a scalar?")
     }
 });
-}
+
 // UI.setVisualizerCancelHandler(() => {
 //     UI.setVisualizerStart();
 // });
