@@ -68,22 +68,14 @@ class Plot {
                 p * y.length
             );
 
-            const zOffset =
-                (Math.max(...y) - Math.min(...y)) * 0.03;
-
             context.push({
                 type: 'scatter',
-                mode: 'lines',
+                mode: 'lines+markers',
                 x: scaledPath,
                 y: scaledPath.map(
-                    p => this.getHeight2D(y, p) + zOffset
+                    p => this.getHeight2D(y, p)
                 ),
                 opacity: 1,
-                line: {
-                    colorscale: 'YIOrRd',
-                    reversescale: true,
-                    width: 3
-                }
             });
 
         }
