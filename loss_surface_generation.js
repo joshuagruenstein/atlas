@@ -16,6 +16,9 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
     running = true;
 
     const trainData = await trainModel(model, data, labels, runPCA, showPath, learningParameters);
+    if (!trainData) { // This could happen if trainModel was canceled.
+        return;
+    }
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
     const weightVectorA = runPCA ? trainData["pca"][0] : await randomNormalizedWeightVector(model);
@@ -26,7 +29,12 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
 
     const pathPositions = showPath ? await computeWeightTrajectoryPositions(trainData["weightVectors"], optimalWeightVector, normalizedA, normalizedB) : null;
 
-    const { lossSurface, percentPathPositions} = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedA, normalizedB, granularity, pathPositions);
+    const lossData = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedA, normalizedB, granularity, pathPositions);
+    if (!lossData) { // This could happen if trainModel was canceled.
+        return;
+    }
+
+    const { lossSurface, percentPathPositions } = lossData;
 
     await reportLossSurfaceGenerationProgress("Drawing plot ... ", 0, true);
 
@@ -261,27 +269,22 @@ function getOptimizer(learningParameters){
 async function trainModel(model, data, labels, runPCA = false, showPath = false, learningParameters) {
     const weightVectors = [];
 
-    const onBatchEnd = (batch, logs) => {
-        // TODO: Wire this up to UI
-        console.log('Accuracy', logs.acc, "Loss", logs.loss);
-    };
+    const optimizer = getOptimizer(learningParameters);
 
-    const onEpochEnd = async (epoch) => {
+    for (let epoch = 0; epoch < learningParameters["epochs"]; epoch += 1) {
+        const loss = optimizer.minimize(model.evaluate, true, model.getWeights());
+
+        console.log('Loss', (await loss.data()));  // TODO: Wire this up to UI
+
         await reportLossSurfaceGenerationProgress("Training model", epoch / learningParameters["epochs"]);
         if (runPCA || showPath) {
             weightVectors.push(await modelWeightsToWeightVector(model));
         }
-    }
 
-    const optimizer = getOptimizer(learningParameters);
-
-    for (let epoch = 0; epoch < learningParameters["epochs"]; epoch += 1) {
-    // for (let epoch = 0; epoch < learningParameters["epoch"] ; epoch += 1) {
-        const loss = optimizer.minimize(model.evaluate, true, model.getWeights());
-        console.log('Loss', (await loss.data()));
-
-        onEpochEnd(epoch);
-        // TODO: onBatch, epoch end
+        if (cancel) {
+            cancelSucceeded();
+            return;
+        }
     }
 
     // await model.fit(data, labels, {
@@ -382,7 +385,7 @@ async function test() {
     
     await reportLossSurfaceGenerationProgress("All done! :) ", 1);
 
-    if (lossData.lossSurface) {
+    if (lossData && lossData.lossSurface) {
         UI.setVisualizerPlotSurface(lossData.lossSurface, lossData.pathPositions);
     } else {
         UI.setVisualizerStart();
@@ -407,6 +410,7 @@ function cancelExecution(){
 
 function cancelSucceeded(){
     cancel = false;
+    running = false;
 }
 
 UI.setVisualizerStartHandler(() => {
