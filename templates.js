@@ -282,12 +282,14 @@ export const settingsBox = (settings, changeOptimizer) => html`
 
         <li class="menu-item pt-2">
             <div class="input-group">
-                <span class="input-group-addon ">Learning Rate</span>
+                <span class="input-group-addon">Learning Rate</span>
                 <input
                     class="form-input"
                     type="number"
                     size="2"
                     value="0.01"
+                    step="0.00000001"
+                    min="0"
                 />
             </div>
         </li>
@@ -302,6 +304,9 @@ export const settingsBox = (settings, changeOptimizer) => html`
                               type="number"
                               size="2"
                               placeholder="0.01"
+                              value="0.01"
+                              step="0.00000001"
+                              min="0"
                           />
                       </div>
                   </li>
@@ -311,7 +316,7 @@ export const settingsBox = (settings, changeOptimizer) => html`
         <li class="menu-item pt-2 pb-2">
             <div class="input-group">
                 <span class="input-group-addon ">Epochs</span>
-                <input class="form-input" type="number" size="2" value="50" />
+                <input class="form-input" type="number" size="2" min="0" step="1" value="50" />
             </div>
         </li>
     </ul>
