@@ -28,6 +28,9 @@ function makeTfVar(v) {
             return null;
     }
 }
+function makeTfNumber(v) {
+    return tf.scalar(parseFloat(v));
+}
 
 UI.setVisualizerStartHandler(() => {
     let tokens = Array.from(moo.compile({
@@ -36,15 +39,15 @@ UI.setVisualizerStartHandler(() => {
         plus: /\+/,
         times: /\*/,
         normsign: /\|\|/,
-        number: /[1-9][0-9]*/,
+        number: {match: /[1-9][0-9]*/, value: v => makeTfNumber(v)},
     }).reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
     console.log(tokens);
     let tfvars = tokens.filter((v, i, a) => v.type === "variable" && v.value.match.trainable === true).map((v, i, a) => v.value.tfvar);
     console.log(tfvars);
     const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
     parser.feed(tokens);
-    const f = () => parser.results[0];
-    console.log(f());
+    const f = parser.results[0];
+    console.log(f);
     generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
 });
 
