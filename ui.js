@@ -46,7 +46,7 @@ const configureMathJax = () => {
         });
     }
 
-    window.MathJax.AuthorInit();    
+    window.MathJax.AuthorInit();
 }
 
 class UI {

@@ -19,37 +19,34 @@ function getVariable(varName) {
 function makeTfVar(v) {
     switch (v.type) {
         case "Scalar":
-            return v.trainable ? tf.scalar(Math.random()).variable() : tf.scalar(parseFloat(v.data));
-            break;
+            return v.trainable ? tf.scalar(Math.random()).variable() : tf.scalar(v.data);
         case "Vector":
-            break;
+            return v.trainable ? tf.randomUniform([v.length]).variable() : tf.tensor1d(v.data);
         case "Matrix":
-            break;
+            return v.trainable ? tf.randomUniform(v.shape).variable() : tf.tensor2d(v.data);
         default:
-            break;
+            return null;
     }
 }
 
-if (false) {
-    UI.setVisualizerStartHandler(() => {
-        let tokens = Array.from(moo.compile({
-            variable: {match: /[a-zA-Z]/, value: v => getVariable(v)},
-            plus: /\+/,
-            times: /\*/,
-            normsign: /\|\|/,
-            number: /[1-9][0-9]*/,
-        }).reset(UI.getExpression()));
-        console.log(tokens);
-        let tfvars = tokens.filter((v, i, a) => v.type === "variable" && v.value.match.trainable === true).map((v, i, a) => v.value.tfvar);
-        console.log(tfvars);
-        const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
-        parser.feed(tokens);
-        const f = () => parser.results[0];
-        console.log(f());
-
-        generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
-    });
-}
+UI.setVisualizerStartHandler(() => {
+    let tokens = Array.from(moo.compile({
+        WS: /[ \t]+/,
+        variable: {match: /[a-zA-Z]/, value: v => getVariable(v)},
+        plus: /\+/,
+        times: /\*/,
+        normsign: /\|\|/,
+        number: /[1-9][0-9]*/,
+    }).reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
+    console.log(tokens);
+    let tfvars = tokens.filter((v, i, a) => v.type === "variable" && v.value.match.trainable === true).map((v, i, a) => v.value.tfvar);
+    console.log(tfvars);
+    const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
+    parser.feed(tokens);
+    const f = () => parser.results[0];
+    console.log(f());
+    generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
+});
 
 // UI.setVisualizerCancelHandler(() => {
 //     UI.setVisualizerStart();
