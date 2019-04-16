@@ -28,7 +28,6 @@ function makeTfVar(v) {
         default:
             break;
     }
-    return v.trainable ? tf.scalar(Math.random()).variable() : tf.scalar(parseFloat(v.data));
 }
 
 UI.setOnloadHandler(() => {
