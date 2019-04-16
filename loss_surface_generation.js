@@ -16,6 +16,9 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
     running = true;
 
     const trainData = await trainModel(model, data, labels, runPCA, showPath, learningParameters);
+    if (!trainData) { // This could happen if trainModel was canceled.
+        return;
+    }
 
     const optimalWeightVector = await modelWeightsToWeightVector(model);
     const weightVectorA = runPCA ? trainData["pca"][0] : await randomNormalizedWeightVector(model);
@@ -26,7 +29,12 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
 
     const pathPositions = showPath ? await computeWeightTrajectoryPositions(trainData["weightVectors"], optimalWeightVector, normalizedA, normalizedB) : null;
 
-    const { lossSurface, percentPathPositions} = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedA, normalizedB, granularity, pathPositions);
+    const lossData = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedA, normalizedB, granularity, pathPositions);
+    if (!lossData) { // This could happen if trainModel was canceled.
+        return;
+    }
+
+    const { lossSurface, percentPathPositions } = lossData;
 
     await reportLossSurfaceGenerationProgress("Drawing plot ... ", 0, true);
 
@@ -117,38 +125,68 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
     let aMax, aMin, bMax, bMin;
 
     // // Stretching
-    // const SQUARE_SIZE = 10; // TODO: This is arbitrary
-    // aMin = Math.min(-SQUARE_SIZE, Math.min(...pathPositions.map(x => x[0])));
-    // aMax = Math.max(SQUARE_SIZE, Math.max(...pathPositions.map(x => x[0])));
-    // bMin = Math.min(-SQUARE_SIZE, Math.min(...pathPositions.map(x => x[1])));
-    // bMax = Math.max(SQUARE_SIZE, Math.max(...pathPositions.map(x => x[1])));
+    const lossSurfaceDimensions = "square_around_optimum_scaled_to_trajectory";
 
-    // Fit exactly to points
-    aMax = Math.max(...pathPositions.map(p => p[0]));
-    bMin = Math.min(...pathPositions.map(p => p[1]));
-    aMin = Math.min(...pathPositions.map(p => p[0]));
-    bMax = Math.max(...pathPositions.map(p => p[1]));
+    switch (lossSurfaceDimensions) {
+        case "square_around_optimum":
+            const SQUARE_SIZE = 1; // TODO: This is arbitrary
+            aMin = Math.min(-SQUARE_SIZE, Math.min(...pathPositions.map(x => x[0])));
+            aMax = Math.max(SQUARE_SIZE, Math.max(...pathPositions.map(x => x[0])));
+            bMin = Math.min(-SQUARE_SIZE, Math.min(...pathPositions.map(x => x[1])));
+            bMax = Math.max(SQUARE_SIZE, Math.max(...pathPositions.map(x => x[1])));
+            break;
+        
+        case "fit_to_trajectory":
+            //Fit exactly to points
+            aMax = Math.max(...pathPositions.map(p => p[0]));
+            bMin = Math.min(...pathPositions.map(p => p[1]));
+            aMin = Math.min(...pathPositions.map(p => p[0]));
+            bMax = Math.max(...pathPositions.map(p => p[1]));
 
-    // Turn the dimensions into a square centered around optimum
-    // const maxStretch = Math.max(Math.abs(aMin), Math.abs(bMin), Math.abs(aMax), Math.abs(bMax));
-    // aMin = -maxStretch;
-    // bMin = -maxStretch;
-    // aMax = maxStretch;
-    // bMax = maxStretch;
+            break;
 
-    // Turn the dimensions into a square
-    // const aDiff = aMax - aMin;
-    // const bDiff = bMax - bMin;
-    // if (aDiff > bDiff) {
-    //     const extraBPadding = (aDiff - bDiff) / 2;
-    //     bMin -= extraBPadding;
-    //     bMax += extraBPadding;
-    // } else {
-    //     const extraAPadding = (bDiff - aDiff) / 2;
-    //     aMin -= extraAPadding;
-    //     aMax += extraAPadding;
-    // }
+        case "square_around_optimum_scaled_to_trajectory":
+            //Fit exactly to points
+            aMax = Math.max(...pathPositions.map(p => p[0]));
+            bMin = Math.min(...pathPositions.map(p => p[1]));
+            aMin = Math.min(...pathPositions.map(p => p[0]));
+            bMax = Math.max(...pathPositions.map(p => p[1]));
 
+            // Turn the dimensions into a square centered around optimum
+            const maxStretch = Math.max(Math.abs(aMin), Math.abs(bMin), Math.abs(aMax), Math.abs(bMax));
+            aMin = -maxStretch;
+            bMin = -maxStretch;
+            aMax = maxStretch;
+            bMax = maxStretch;
+
+            break;
+
+        case "fit_to_trajectory_square":
+            //Fit exactly to points
+            aMax = Math.max(...pathPositions.map(p => p[0]));
+            bMin = Math.min(...pathPositions.map(p => p[1]));
+            aMin = Math.min(...pathPositions.map(p => p[0]));
+            bMax = Math.max(...pathPositions.map(p => p[1]));
+
+            // Turn the dimensions into a square
+            const aDiff = aMax - aMin;
+            const bDiff = bMax - bMin;
+            if (aDiff > bDiff) {
+                const extraBPadding = (aDiff - bDiff) / 2;
+                bMin -= extraBPadding;
+                bMax += extraBPadding;
+            } else {
+                const extraAPadding = (bDiff - aDiff) / 2;
+                aMin -= extraAPadding;
+                aMax += extraAPadding;
+            }
+            break;
+        
+        default:
+            alert("Invalid loss surface dimensions");
+    }
+
+    // Add padding around our region to make sure we're not too close to our trajectory
     const aStepSize = (aMax - aMin) / granularity;
     const bStepSize = (bMax - bMin) / granularity;
 
@@ -195,8 +233,34 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
  * Evaluate the model's loss.
  */
 async function evaluateLossOnData(model, data, labels) {
-    const t = model.evaluate(data, labels)[0];
-    return (await t.data())[0];
+    const modelOutput = model.evaluate().flatten();
+    console.assert(modelOutput.shape == 1, "The output of the model must by 1, not " + modelOutput.shape);
+    // console.log(modelOutput);
+    // const t = model.evaluate(data, labels)[0];
+    // return (await t.data())[0];
+    return (await modelOutput.data())[0];
+}
+
+/**
+ * Get an optimizer from the {learningParameters}.
+ */
+function getOptimizer(learningParameters){
+    switch (learningParameters["optimizer"].toLowerCase()) {
+        case "sgd":
+            return tf.train.sgd(learningParameters["learningRate"]);
+        case "momentum":
+            return tf.train.momentum(learningParameters["learningRate"], learningParameters["momentum"]);
+        case "adagrad":
+            return tf.train.adagrad(learningParameters["learningRate"]);
+        case "adadelta":
+            return tf.train.adadelta(learningParameters["learningRate"]);
+        case "adam":
+            return tf.train.adam(learningParameters["learningRate"]);
+        case "rmsprop":
+            return tf.train.rmsprop(learningParameters["learningRate"]);
+        default:
+            alert("Invalid optimizer! " + learningParameters["optimizer"]);
+    }
 }
 
 /**
@@ -205,25 +269,29 @@ async function evaluateLossOnData(model, data, labels) {
 async function trainModel(model, data, labels, runPCA = false, showPath = false, learningParameters) {
     const weightVectors = [];
 
-    const onBatchEnd = (batch, logs) => {
-        // TODO: Wire this up to UI
-        console.log('Accuracy', logs.acc, "Loss", logs.loss);
-    };
+    const optimizer = getOptimizer(learningParameters);
 
-    const onEpochEnd = async (epoch) => {
+    for (let epoch = 0; epoch < learningParameters["epochs"]; epoch += 1) {
+        const loss = optimizer.minimize(model.evaluate, true, model.getWeights());
+
+        console.log('Loss', (await loss.data()));  // TODO: Wire this up to UI
+
         await reportLossSurfaceGenerationProgress("Training model", epoch / learningParameters["epochs"]);
         if (runPCA || showPath) {
             weightVectors.push(await modelWeightsToWeightVector(model));
         }
+
+        if (cancel) {
+            cancelSucceeded();
+            return;
+        }
     }
 
-    // TODO: Training
-
-    await model.fit(data, labels, {
-      epochs: learningParameters["epochs"],
-      batchSize: 100,
-      callbacks: { onBatchEnd, onEpochEnd }
-    });
+    // await model.fit(data, labels, {
+    //   epochs: learningParameters["epochs"],
+    //   batchSize: 100,
+    //   callbacks: { onBatchEnd, onEpochEnd }
+    // });
 
     if (runPCA) {
         await reportLossSurfaceGenerationProgress("Running PCA (this page may freeze)", 0, true);
@@ -270,35 +338,40 @@ async function test() {
         return;
     }
 
-    class MyCustomLayer extends tf.layers.Layer {
+    const xs = tf.tensor2d([[0, 1, 2, 3]]).transpose();
+    // const ys = tf.tensor1d([1.1, 5.9, 16.8, 33.9]);
 
-        constructor(config) {
-            super(config);
+    const A = tf.variable(tf.randomNormal([1, 4]));
+
+    // const a = tf.scalar(Math.random()).variable();
+    // const b = tf.scalar(Math.random()).variable();
+    // const c = tf.scalar(Math.random()).variable();
+
+    // y = a * x^2 + b * x + c.
+    // const f = () => 
+    // const f = x => a.mul(x.square()).add(b.mul(x)).add(c);
+    // const loss = (pred, label) => pred.sub(label).square().mean();
+
+    const model =
+    {
+        getWeights: function () {
+            return [A];
+        },
+        setWeights: function(weights) {
+            const variables = [A];
+            for(const i in variables) {                
+                variables[i].assign(weights[i]);
+            }
+        },
+        evaluate: function () {
+            return tf.norm(tf.sin(A.matMul(xs))).sum();
         }
+    };
+    const data = 1;
+    const labels = 1;
 
-        apply(x){
-            return tf.sin(x);
-        }
-    }
-    MyCustomLayer.className = 'MyCustomLayer';
-    tf.serialization.registerClass(MyCustomLayer);
-
-    const model = tf.sequential({
-        layers: [
-            //784
-            tf.layers.dense({ inputShape: [78], units: 3, activation: 'sigmoid' }),
-            // tf.layers.dense({ inputShape: [78], units: 10, activation: 'sigmoid' }),
-            // tf.layers.dense({ inputShape: [78], units: 10, activation: 'relu6' }),
-            tf.layers.dense({ units: 10, activation: 'softmax' }),
-        ]
-    });
-    model.compile({
-        optimizer: 'sgd',
-        loss: 'categoricalCrossentropy',
-        metrics: ['accuracy']
-    });
-    const data = tf.randomNormal([100, 78]);
-    const labels = tf.randomUniform([100, 10]);
+    // const data = tf.randomNormal([100, 78]);
+    // const labels = tf.randomUniform([100, 10]);
 
     const lossData = await generateLossSurface(
       model,
@@ -312,7 +385,7 @@ async function test() {
     
     await reportLossSurfaceGenerationProgress("All done! :) ", 1);
 
-    if (lossData.lossSurface) {
+    if (lossData && lossData.lossSurface) {
         UI.setVisualizerPlotSurface(lossData.lossSurface, lossData.pathPositions);
     } else {
         UI.setVisualizerStart();
@@ -337,6 +410,7 @@ function cancelExecution(){
 
 function cancelSucceeded(){
     cancel = false;
+    running = false;
 }
 
 UI.setVisualizerStartHandler(() => {
