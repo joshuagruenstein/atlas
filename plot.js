@@ -47,11 +47,13 @@ class Plot {
         }
     }
 
-    line(x, y) {
+    line(x, y, path) {
         /**
          * @param x List of x values.
          * @param y List of y values.
+         * @param path A list of x coordinates.
          */
+
         const context = [
             {
                 x: x,
@@ -60,6 +62,31 @@ class Plot {
                 colorscale: 'YIGnBu'
             }
         ];
+
+        if (path) {
+            const scaledPath = path.map(p => 
+                p * y.length
+            );
+
+            const zOffset =
+                (Math.max(...y) - Math.min(...y)) * 0.03;
+
+            context.push({
+                type: 'scatter',
+                mode: 'lines',
+                x: scaledPath,
+                y: scaledPath.map(
+                    p => this.getHeight2D(y, p) + zOffset
+                ),
+                opacity: 1,
+                line: {
+                    colorscale: 'YIOrRd',
+                    reversescale: true,
+                    width: 3
+                }
+            });
+
+        }
 
         Plotly.newPlot(this.div, context, this.layout);
     }
@@ -127,6 +154,24 @@ class Plot {
             neighborZ +
             gradX * (xScaled - neighborX) +
             gradY * (yScaled - neighborY)
+        );
+    }
+
+    getHeight2D(data, xScaled) {
+        /**
+         * @param data 2D array of heights.
+         * @param x    x-coordinate of point of interest.
+         * @param y    y-coordinate of point of interest.
+         */
+
+        const neighborX = Math.floor(xScaled);
+        const neighborZ = data[neighborX];
+
+        const grad = data[neighborX + 1] - neighborZ;
+
+        return (
+            neighborZ +
+            grad * (xScaled - neighborX)
         );
     }
 }

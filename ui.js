@@ -214,7 +214,7 @@ class UI {
             if (data.plotData.type === 'surface') {
                 this.setVisualizerPlotSurface(data.plotData.data, data.plotData.path);
             } else {
-                this.setVisualizerPlotLine(data.plotData.x, data.plotData.y);
+                this.setVisualizerPlotLine(data.plotData.x, data.plotData.y, data.plotData.path);
             }
         }
     }
@@ -299,15 +299,15 @@ class UI {
         plot.surface(data, path);
     }
 
-    setVisualizerPlotLine(x, y) {
-        this.plotData = {'type':'line', 'x':x, 'y':y};
+    setVisualizerPlotLine(x, y, path = null) {
+        this.plotData = {'type':'line', 'x':x, 'y':y, 'path':path};
 
         render(
             plotVisualizerBox(this.onCancel.bind(this)),
             this.visualizerBoxDOM
         );
         let plot = new Plot('plotBox', 'Loss Curve');
-        plot.line(x, y);
+        plot.line(x, y, path);
     }
 
     getSettings() {
