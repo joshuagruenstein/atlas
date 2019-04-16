@@ -6,19 +6,31 @@ import './grammar.js';
 function makeVarContext() {
     let vars = UI.getVariables();
     let tfvars = vars.map((v, i, a) => ({match: v, tfvar: makeTfVar(v)}));
-    return Object.assign(...tfvars.map(
-        (v, i, a) => {
-            let k = {};
-            k[v.match.name] = v;
-            return k;
-        }
-    ));
+    if (tfvars.length > 0) {
+        return Object.assign(...tfvars.map(
+            (v, i, a) => {
+                let k = {};
+                k[v.match.name] = v;
+                return k;
+            }
+        ));
+    }
+    else {
+        UI.renderMessage("warning", "Warning: you haven't declared any variables.")
+        return {};
+    }
 }
 
 function getVariable(varName, varContext, usedVars) {
     let c = varContext[varName];
-    usedVars[varName] = c;
-    return c;
+    if (typeof c !== "undefined") {
+        usedVars[varName] = c;
+        return c;
+    }
+    else {
+        UI.renderError("Error: Variable " + varName + " not found.")
+        return null;
+    }
 }
 
 function makeTfVar(v) {
@@ -37,8 +49,8 @@ function makeTfVar(v) {
 UI.setVisualizerStartHandler(() => {
     let varContext = makeVarContext();
     let usedVars = {};
-    let tokens = Array.from(moo.compile({
-        WS: /[\t]+/,
+    let lexer = moo.compile({
+        WS: {match: /[\s]+/, lineBreaks: true},
         power: /\^/,
         transpose: /T/,
         lparen: /\(/,
@@ -60,18 +72,30 @@ UI.setVisualizerStartHandler(() => {
         norm: /\|\|/,
         abs: /\|/,
         number: {match: /[0-9]+/, value: v => v},
-    }).reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
-    console.log(tokens);
-    let tfvars = Object.keys(usedVars).filter((v, i, a) => usedVars[v].match).map((v, i, a) => usedVars[v].tfvar);
-    console.log(tfvars);
-    const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
+    });
     try {
-        parser.feed(tokens);
-        const f = parser.results[0];
-        generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
+        let tokens = Array.from(lexer.reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
+        let tfvars = Object.keys(usedVars).filter((v, i, a) => usedVars[v].match).map((v, i, a) => usedVars[v].tfvar);
+        const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
+        try {
+            parser.feed(tokens);
+            const f = parser.results[0];
+            try {
+                generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
+            }
+            catch (err) {
+                UI.renderError("Error: We could not generate your loss surface.");
+                console.log(err);
+            }
+        }
+        catch (err) {
+            UI.renderError("Error: Your expression could not be parsed. Are you sure your final expression is a scalar?");
+            console.log(err);
+        }
     }
     catch (err) {
-        UI.renderError("Invalid syntax. Are you sure all variables are declared and your final expression is a scalar?")
+        UI.renderError("Error: We didn't recognize something in your input.");
+        console.log(err);
     }
 });
 
