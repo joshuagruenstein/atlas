@@ -122,7 +122,7 @@ class UI {
 
         picker.addEventListener(
             'change',
-            function() {
+            () => {
                 if (picker.files.length === 0) return;
                 let file = picker.files[0];
 
@@ -130,7 +130,7 @@ class UI {
                     return this.renderError('Must upload valid CSV file.');
 
                 let reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = (event) => {
                     try {
                         variable['data'] = parseCSV(
                             event.target.result,

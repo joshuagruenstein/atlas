@@ -46,9 +46,10 @@ export const parseCSV = (str, type) => {
         arr[row][col] += cc;
     }
 
-    if (type === 'Vector' && arr.length > 1)
-        throw 'Vector CSVs can only have one row.';
-    if (!arr.every((row, i, arr) => row.length === arr[0].length))
+    if (type === 'Vector') {
+        if (arr.every(el => el.length === 0)) arr = arr.map(el => el[0]);
+        else if (arr.length === 0) throw 'Vector CSVs can only have one column/row.';
+    } if (!arr.every((row, i, arr) => row.length === arr[0].length))
         throw 'All rows must be same length';
     if (!arr.every((row, i, arr) => row.every((el, i, row) => !isNaN(el))))
         throw 'All CSV elements must be numeric.';
