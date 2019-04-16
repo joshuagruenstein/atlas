@@ -51,7 +51,18 @@ export async function generateLossSurfaceFromUI(trainableVariables, lossFunction
     await reportLossSurfaceGenerationProgress("All done! :) ", 1);
 
     if (lossData && lossData.lossSurface) {
-        UI.setVisualizerPlotSurface(lossData.lossSurface, lossData.pathPositions);
+        if (lossData.lossSurface.every(row => (
+            row.every((el, i) => el === lossData.lossSurface[0][i])
+        ))) UI.setVisualizerPlotLine(
+            [...Array(lossData.lossSurface[0].length).keys()],
+            lossData.lossSurface[0],
+            lossData.pathPositions.map(el => el[0])
+        );
+
+        else UI.setVisualizerPlotSurface(
+            lossData.lossSurface,
+            lossData.pathPositions
+        );
     } else {
         UI.setVisualizerStart();
     }
