@@ -24,10 +24,10 @@ var grammar = {
     {"name": "scalarProduct", "symbols": ["scalarProduct", tokenTimes, "scalar"], "postprocess": ([fst, _, snd]) => tf.mul(fst, snd)},
     {"name": "scalarProduct", "symbols": ["scalarProduct", "scalar"], "postprocess": ([fst, snd]) => tf.mul(fst, snd)},
     {"name": "scalarProduct", "symbols": ["scalar"], "postprocess": id},
-    {"name": "scalar", "symbols": [tokenScalar], "postprocess": (s) => s[0].value.tfvar},
-    {"name": "scalar", "symbols": [tokenNumber], "postprocess": (n) => getTfNumber(n[0].value)},
+    {"name": "scalar", "symbols": [tokenScalar], "postprocess": ([s]) => s.value.tfvar},
+    {"name": "scalar", "symbols": [tokenNumber], "postprocess": ([n]) => getTfNumber(n.value)},
     {"name": "scalar", "symbols": [tokenNormsign, "vectorSum", tokenNormsign], "postprocess": ([l, v, r]) => tf.norm(v)},
-    {"name": "scalar", "symbols": [tokenNormsign, "matrixSum", tokenNormsign], "postprocess": ([l, v, r]) => tf.norm(v)},
+    {"name": "scalar", "symbols": [tokenNormsign, "matrixSum", tokenNormsign], "postprocess": ([l, m, r]) => tf.norm(m)},
     {"name": "vectorSum", "symbols": ["vectorSum", tokenPlus, "vectorProduct"], "postprocess": ([fst, _, snd]) => tf.add(fst, snd)},
     {"name": "vectorSum", "symbols": ["vectorProduct"], "postprocess": id},
     {"name": "vectorProduct", "symbols": ["vectorProduct", tokenTimes, "vector"], "postprocess": ([fst, _, snd]) => tf.mul(fst, snd)},
@@ -38,8 +38,8 @@ var grammar = {
     {"name": "matrixProduct", "symbols": ["matrixProduct", tokenTimes, "matrix"], "postprocess": ([fst, _, snd]) => tf.mul(fst, snd)},
     {"name": "matrixProduct", "symbols": ["matrixProduct", "matrix"], "postprocess": ([fst, snd]) => tf.mul(fst, snd)},
     {"name": "matrixProduct", "symbols": ["matrix"], "postprocess": id},
-    {"name": "vector", "symbols": [tokenVector], "postprocess": (s) => s[0].value.tfvar},
-    {"name": "matrix", "symbols": [tokenMatrix], "postprocess": (s) => s[0].value.tfvar}
+    {"name": "vector", "symbols": [tokenVector], "postprocess": ([v]) => v.value.tfvar},
+    {"name": "matrix", "symbols": [tokenMatrix], "postprocess": ([m]) => m.value.tfvar}
 ]
   , ParserStart: "scalarExpression"
 }
