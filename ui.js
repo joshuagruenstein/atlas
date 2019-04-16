@@ -15,6 +15,39 @@ import { copyToClipboard, parseCSV } from './utils.js';
 
 import Plot from './plot.js';
 
+const configureMathJax = () => {
+    if (!window.MathJax) window.MathJax = {};
+
+    window.MathJax.AuthorInit = function() {
+        MathJax.Hub.Register.StartupHook('End', function() {
+            MathJax.Hub.processSectionDelay = 0;
+            let expressionSource = document.getElementById('expressionSource');
+            let expressionRendering = document.getElementById('expressionRendering');
+            let math = MathJax.Hub.getAllJax('expressionRendering')[0];
+            expressionSource.addEventListener('input', function() {
+                MathJax.Hub.Queue(['Text', math, expressionSource.value]);
+            });
+
+            window.MathJaxInitialized = true;
+        });
+
+        MathJax.Hub.Register.StartupHook('AsciiMath Jax Ready', function () {
+            let AM = MathJax.InputJax.AsciiMath.AM;
+
+            AM.newsymbol({
+                input:'relu',
+                tag:'mi',
+                output:'relu',
+                tex:null,
+                ttype:AM.TOKEN.UNARY,
+                func:true
+            });
+        });
+    }
+
+    window.MathJax.AuthorInit();    
+}
+
 class UI {
     constructor() {        
         this.variables = [];
@@ -28,6 +61,7 @@ class UI {
         this.modalBoxDOM = document.getElementById('modalBox');
         this.navbarBoxDOM = document.getElementById('navbarBox');
         this.expressionSourceDOM = document.getElementById("expressionSource");
+        configureMathJax();
 
         window.onload = onload => {
             if (!document.cookie.split(';').filter(function(item) {
