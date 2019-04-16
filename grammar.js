@@ -16,6 +16,12 @@ function id(x) { return x[0]; }
     const tokenLparen = {test: x => x.type === 'lparen'};
     const tokenRparen = {test: x => x.type === 'rparen'};
     const tokenRelu = {test: x => x.type === 'relu'};
+    const tokenSin = {test: x => x.type === 'sin'};
+    const tokenCos = {test: x => x.type === 'cos'};
+    const tokenSigmoid = {test: x => x.type === 'sigmoid'};
+    const tokenTanh = {test: x => x.type === 'tanh'};
+    const tokenSqrt = {test: x => x.type === 'sqrt'};
+    const tokenAbs = {test: x => x.type === 'abs'};
     const tokenOnehot = {test: x => x.type === 'onehot'};
     const tokenUnderscore = {test: x => x.type === 'underscore'};
     const tokenComma = {test: x => x.type === 'comma'};
@@ -36,7 +42,13 @@ var grammar = {
     {"name": "sAS", "symbols": [tokenMinus, "sMD"], "postprocess": ([_, snd]) => (() => tf.sub(0, snd()))},
     {"name": "sAS", "symbols": ["sMD"], "postprocess": id},
     {"name": "s", "symbols": [tokenScalar], "postprocess": ([s]) => (() => s.value.tfvar)},
-    {"name": "s", "symbols": [tokenRelu, tokenLparen, "sAS", tokenRparen], "postprocess": ([relu, l, s, r]) => (() => tf.relu(s()))},
+    {"name": "s", "symbols": [tokenRelu, tokenLparen, "sAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.relu(s()))},
+    {"name": "s", "symbols": [tokenSin, tokenLparen, "sAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.sin(s()))},
+    {"name": "s", "symbols": [tokenCos, tokenLparen, "sAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.cos(s()))},
+    {"name": "s", "symbols": [tokenSigmoid, tokenLparen, "sAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.sigmoid(s()))},
+    {"name": "s", "symbols": [tokenTanh, tokenLparen, "sAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.tanh(s()))},
+    {"name": "s", "symbols": [tokenSqrt, tokenLparen, "sAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.sqrt(s()))},
+    {"name": "s", "symbols": [tokenAbs, "sAS", tokenAbs], "postprocess": ([l, s, r]) => (() => tf.abs(s()))},
     {"name": "s", "symbols": [tokenNorm, "mAS", tokenNorm, tokenUnderscore, tokenNumber], "postprocess": ([l, m, r, u, o]) => (() => tf.norm(m(), parseFloat(o.value)))},
     {"name": "s", "symbols": [tokenNumber], "postprocess": ([n]) => (() => parseFloat(n.value))},
     {"name": "mP", "symbols": [tokenLparen, "mAS", tokenRparen], "postprocess": ([l, m, r]) => m},
@@ -57,7 +69,13 @@ var grammar = {
     {"name": "mAS", "symbols": [tokenMinus, "smMD"], "postprocess": ([_, snd]) => (() => tf.sub(0, snd()))},
     {"name": "mAS", "symbols": ["smMD"], "postprocess": id},
     {"name": "m", "symbols": [tokenMatrix], "postprocess": ([m]) => (() => m.value.tfvar)},
-    {"name": "m", "symbols": [tokenRelu, tokenLparen, "mAS", tokenRparen], "postprocess": ([relu, l, m, r]) => (() => tf.relu(m()))}
+    {"name": "m", "symbols": [tokenRelu, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, m, r]) => (() => tf.relu(m()))},
+    {"name": "m", "symbols": [tokenSin, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.sin(m()))},
+    {"name": "m", "symbols": [tokenCos, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.cos(m()))},
+    {"name": "m", "symbols": [tokenSigmoid, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.sigmoid(m()))},
+    {"name": "m", "symbols": [tokenTanh, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.tanh(m()))},
+    {"name": "m", "symbols": [tokenSqrt, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.sqrt(s()))},
+    {"name": "m", "symbols": [tokenAbs, "mAS", tokenAbs], "postprocess": ([l, s, r]) => (() => tf.abs(s()))}
 ]
   , ParserStart: "main"
 }

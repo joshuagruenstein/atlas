@@ -44,6 +44,11 @@ UI.setVisualizerStartHandler(() => {
         transpose: /T/,
         lparen: /\(/,
         rparen: /\)/,
+        sin: /sin/,
+        cos: /cos/,
+        sigmoid: /sigmoid/,
+        tanh: /tanh/,
+        sqrt: /sqrt/,
         relu: /relu/,
         onehot: /onehot/,
         underscore: /_/,
@@ -54,6 +59,7 @@ UI.setVisualizerStartHandler(() => {
         times: /\*/,
         divides: /\//,
         norm: /\|\|/,
+        abs: /\|/,
         number: {match: /[0-9]+/, value: v => v},
     }).reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
     console.log(tokens);
