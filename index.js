@@ -32,10 +32,6 @@ function makeTfNumber(v) {
     return tf.scalar(parseFloat(v));
 }
 
-UI.setOnloadHandler(() => {
-    UI.renderSuccess("GET BORPED SON");
-});
-
 UI.setVisualizerStartHandler(() => {
     let tokens = Array.from(moo.compile({
         WS: /[ \t]+/,
