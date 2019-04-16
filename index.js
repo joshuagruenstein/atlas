@@ -34,7 +34,6 @@ function makeTfVar(v) {
     }
 }
 
-if(true) {
 UI.setVisualizerStartHandler(() => {
     let varContext = makeVarContext();
     let usedVars = {};
@@ -65,7 +64,3 @@ UI.setVisualizerStartHandler(() => {
     console.log(f())
     generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
 });
-}
-// UI.setVisualizerCancelHandler(() => {
-//     UI.setVisualizerStart();
-// });
