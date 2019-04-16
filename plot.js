@@ -7,6 +7,27 @@ const baseLayout = {
         r: 0,
         b: 20,
         t: 90
+    },
+    scene: {
+        aspectratio: { x: 1, y: 1, z: 0.7 },
+        aspectmode: 'manual',
+        xaxis: {
+            showticklabels: false,
+            title: {
+                text: ''
+            }
+        },
+        yaxis: {
+            showticklabels: false,
+            title: {
+                text: ''
+            }
+        },
+        zaxis: {
+            title: {
+                text: 'Cost'
+            }
+        }
     }
 };
 
@@ -51,12 +72,6 @@ class Plot {
         const context = [];
 
         if (path) {
-            // const scaledPath = path.map(p =>
-            //     [((p[0] + 1) * data[0].length) / 2,
-            //         ((p[1] + 1) * data.length) / 2]);
-
-            console.log({ path });
-
             const scaledPath = path.map(p => [
                 p[0] * data[0].length,
                 p[1] * data.length
