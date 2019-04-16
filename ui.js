@@ -23,6 +23,7 @@ const configureMathJax = () => {
             MathJax.Hub.processSectionDelay = 0;
             let expressionSource = document.getElementById('expressionSource');
             let expressionRendering = document.getElementById('expressionRendering');
+            expressionRendering.style.color = "#000";
             let math = MathJax.Hub.getAllJax('expressionRendering')[0];
             expressionSource.addEventListener('input', function() {
                 MathJax.Hub.Queue(['Text', math, expressionSource.value]);
@@ -63,7 +64,7 @@ class UI {
         this.expressionSourceDOM = document.getElementById("expressionSource");
         configureMathJax();
 
-        window.onload = onload => {
+        window.onload = () => {
             if (!document.cookie.split(';').filter(function(item) {
                 return item.trim().indexOf('visited=') == 0
             }).length) {
@@ -73,7 +74,7 @@ class UI {
 
             this.setVisualizerStart();
             this.refreshView();
-            this.onLoad();
+            if (this.onLoad) this.onLoad();
 
             this.setStateFromURL();
         };
