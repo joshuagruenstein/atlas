@@ -5,6 +5,7 @@ import './grammar.js';
 
 function getVariable(varName) {
     let vars = UI.getVariables();
+    console.log(vars);
     let match = null;
     let tfvar = null;
     vars.forEach((v, i) => {
@@ -19,14 +20,13 @@ function getVariable(varName) {
 function makeTfVar(v) {
     switch (v.type) {
         case "Scalar":
-            return v.trainable ? tf.scalar(Math.random()).variable() : tf.scalar(parseFloat(v.data));
-            break;
+            return v.trainable ? tf.scalar(Math.random()).variable() : tf.scalar(v.data);
         case "Vector":
-            break;
+            return v.trainable ? tf.randomUniform([v.length]).variable() : tf.tensor1d(v.data);
         case "Matrix":
-            break;
+            return v.trainable ? tf.randomUniform(v.shape).variable() : tf.tensor2d(v.data);
         default:
-            break;
+            return null;
     }
 }
 
@@ -36,12 +36,13 @@ UI.setOnloadHandler(() => {
 
 UI.setVisualizerStartHandler(() => {
     let tokens = Array.from(moo.compile({
+        WS: /[ \t]+/,
         variable: {match: /[a-zA-Z]/, value: v => getVariable(v)},
         plus: /\+/,
         times: /\*/,
         normsign: /\|\|/,
         number: /[1-9][0-9]*/,
-    }).reset(UI.getExpression()));
+    }).reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
     console.log(tokens);
     let tfvars = tokens.filter((v, i, a) => v.type === "variable" && v.value.match.trainable === true).map((v, i, a) => v.value.tfvar);
     console.log(tfvars);
