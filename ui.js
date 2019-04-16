@@ -15,6 +15,8 @@ import { copyToClipboard, parseCSV } from './utils.js';
 
 import Plot from './plot.js';
 
+const FUNCTIONS = ['relu', 'onehot'];
+
 const configureMathJax = () => {
     if (!window.MathJax) window.MathJax = {};
 
@@ -35,10 +37,10 @@ const configureMathJax = () => {
         MathJax.Hub.Register.StartupHook('AsciiMath Jax Ready', function () {
             let AM = MathJax.InputJax.AsciiMath.AM;
 
-            AM.newsymbol({
-                input:'relu',
+            for (let f of FUNCTIONS) AM.newsymbol({
+                input:f,
                 tag:'mi',
-                output:'relu',
+                output:f,
                 tex:null,
                 ttype:AM.TOKEN.UNARY,
                 func:true
