@@ -16,7 +16,7 @@ import { copyToClipboard, parseCSV } from './utils.js';
 
 import Plot from './plot.js';
 
-const FUNCTIONS = ['relu', 'onehot'];
+const FUNCTIONS = ['relu', 'onehot', 'softmax', 'sigmoid'];
 
 const configureMathJax = () => {
     if (!window.MathJax) window.MathJax = {};

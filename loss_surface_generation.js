@@ -7,7 +7,7 @@ import UI from "./ui.js";
 var running = false;
 var cancel = false;
 
-const MAX_LOSS_VALUE = 1000;
+const MAX_LOSS_VALUE = 100000;
 
 /**
  * Accepts a {lossFunction} with {trainableVariables} and generates a loss surface plot

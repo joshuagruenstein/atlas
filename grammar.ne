@@ -11,6 +11,8 @@
     const tokenTranspose = {test: x => x.type === 'transpose'};
     const tokenLparen = {test: x => x.type === 'lparen'};
     const tokenRparen = {test: x => x.type === 'rparen'};
+    const tokenLbracket = {test: x => x.type === 'lbracket'};
+    const tokenRbracket = {test: x => x.type === 'rbracket'};
     const tokenRelu = {test: x => x.type === 'relu'};
     const tokenSin = {test: x => x.type === 'sin'};
     const tokenCos = {test: x => x.type === 'cos'};
@@ -77,11 +79,22 @@ mAS -> mAS %tokenPlus smMD {% ([fst, _, snd]) => (() => tf.add(fst(), snd())) %}
 
 m -> %tokenMatrix {% ([m]) => (() => m.value.tfvar) %}
     | %tokenRelu %tokenLparen mAS %tokenRparen {% ([f, l, m, r]) => (() => tf.relu(m())) %}
-    | %tokenSin %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sin(m())) %}
-    | %tokenCos %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.cos(m())) %}
-    | %tokenSigmoid %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sigmoid(m())) %}
-    | %tokenTanh %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.tanh(m())) %}
-    | %tokenSqrt %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sqrt(s())) %}
-    | %tokenAbs mAS %tokenAbs {% ([l, s, r]) => (() => tf.abs(s())) %}
-    | %tokenSoftmax %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.softmax(s())) %}
-    | %tokenOnehot %tokenLparen mAS %tokenComma %tokenNumber %tokenRparen {% ([f, l, m, c, n, r]) => (() => tf.onehot(m(), parseFloat(n.value))) %}
+    | %tokenSin %tokenLparen mAS %tokenRparen {% ([f, l, m, r]) => (() => tf.sin(m())) %}
+    | %tokenCos %tokenLparen mAS %tokenRparen {% ([f, l, m, r]) => (() => tf.cos(m())) %}
+    | %tokenSigmoid %tokenLparen mAS %tokenRparen {% ([f, l, m, r]) => (() => tf.sigmoid(m())) %}
+    | %tokenTanh %tokenLparen mAS %tokenRparen {% ([f, l, m, r]) => (() => tf.tanh(m())) %}
+    | %tokenSqrt %tokenLparen mAS %tokenRparen {% ([f, l, m, r]) => (() => tf.sqrt(m())) %}
+    | %tokenAbs mAS %tokenAbs {% ([l, m, r]) => (() => tf.abs(m())) %}
+    | %tokenSoftmax %tokenLparen mAS %tokenRparen {% ([f, l, m, r]) => (() => tf.softmax(m())) %}
+    | %tokenOnehot %tokenLparen mAS %tokenComma %tokenNumber %tokenRparen {% ([f, l, m, c, n, r]) => (() => tf.oneHot(m().toInt(), parseFloat(n.value))) %}
+    | %tokenLbracket scalarSequence %tokenRbracket {% ([l, seq, r]) => (() => tf.tensor1d(seq())) %}
+    | %tokenLbracket vectorSequence %tokenRbracket {% ([l, seq, r]) => (() => tf.tensor1d(seq())) %}
+
+scalarSequence -> sAS %tokenComma scalarSequence {% ([s, c, seq]) => (() => [s()].concat(seq())) %}
+    | sAS {% ([s]) => (() => [s()]) %}
+
+vectorSequence -> mAS %tokenComma vectorSequence {% ([m, c, seq]) => (() => [m()].concat(seq())) %}
+    | mAS {% ([m]) => (() => [m()]) %}
+
+sequence -> scalarSequence {% ([seq]) => (() => seq()) %}
+    | vectorSequence {% ([seq]) => (() => seq()) %}

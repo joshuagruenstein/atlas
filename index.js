@@ -55,6 +55,8 @@ UI.setVisualizerStartHandler(() => {
         transpose: /T/,
         lparen: /\(/,
         rparen: /\)/,
+        lbracket: /\[/,
+        rbracket: /\]/,
         sin: /sin/,
         cos: /cos/,
         sigmoid: /sigmoid/,
