@@ -62,6 +62,7 @@ UI.setVisualizerStartHandler(() => {
         sqrt: /sqrt/,
         relu: /relu/,
         onehot: /onehot/,
+        softmax: /softmax/,
         underscore: /_/,
         comma: /,/,
         variable: {match: /[a-zA-Z]/, value: v => getVariable(v, varContext, usedVars)},

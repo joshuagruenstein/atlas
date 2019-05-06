@@ -23,6 +23,7 @@ function id(x) { return x[0]; }
     const tokenSqrt = {test: x => x.type === 'sqrt'};
     const tokenAbs = {test: x => x.type === 'abs'};
     const tokenOnehot = {test: x => x.type === 'onehot'};
+    const tokenSoftmax = {test: x => x.type === 'softmax'};
     const tokenUnderscore = {test: x => x.type === 'underscore'};
     const tokenComma = {test: x => x.type === 'comma'};
 var grammar = {
@@ -75,7 +76,9 @@ var grammar = {
     {"name": "m", "symbols": [tokenSigmoid, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.sigmoid(m()))},
     {"name": "m", "symbols": [tokenTanh, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.tanh(m()))},
     {"name": "m", "symbols": [tokenSqrt, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.sqrt(s()))},
-    {"name": "m", "symbols": [tokenAbs, "mAS", tokenAbs], "postprocess": ([l, s, r]) => (() => tf.abs(s()))}
+    {"name": "m", "symbols": [tokenAbs, "mAS", tokenAbs], "postprocess": ([l, s, r]) => (() => tf.abs(s()))},
+    {"name": "m", "symbols": [tokenSoftmax, tokenLparen, "mAS", tokenRparen], "postprocess": ([f, l, s, r]) => (() => tf.softmax(s()))},
+    {"name": "m", "symbols": [tokenOnehot, tokenLparen, "mAS", tokenComma, tokenNumber, tokenRparen], "postprocess": ([f, l, m, c, n, r]) => (() => tf.onehot(m(), parseFloat(n.value)))}
 ]
   , ParserStart: "main"
 }
