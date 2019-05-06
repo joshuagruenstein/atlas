@@ -356,6 +356,7 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
     const optimizer = getOptimizer(learningParameters);
 
     for (let epoch = 0; epoch < learningParameters["epochs"]; epoch += 1) {
+        console.log("Variables", model.getWeights());
         const loss = await optimizer.minimize(model.evaluate, true, model.getWeights()).data();
 
         await reportLossSurfaceGenerationProgress("Training model", epoch / learningParameters["epochs"]);
