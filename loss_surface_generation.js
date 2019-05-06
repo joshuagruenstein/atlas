@@ -51,6 +51,7 @@ export async function generateLossSurfaceFromUI(trainableVariables, lossFunction
     await reportLossSurfaceGenerationProgress("All done! :) ", 1);
 
     if (lossData && lossData.lossSurface) {
+        console.log("losses", lossData.losses);
         UI.showLossPlot(lossData.losses);
 
         if (lossData.lossSurface.every(row => (
@@ -364,7 +365,7 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
     const optimizer = getOptimizer(learningParameters);
 
     for (let epoch = 0; epoch < learningParameters["epochs"]; epoch += 1) {
-        const loss = await optimizer.minimize(model.evaluate, true, model.getWeights()).data();
+        const loss = (await optimizer.minimize(model.evaluate, true, model.getWeights()).data())[0];
 
         losses.push(loss);
 
