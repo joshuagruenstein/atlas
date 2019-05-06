@@ -64,20 +64,15 @@ class Plot {
         ];
 
         if (path) {
-            const scaledPath = path.map(p => 
-                p * y.length
-            );
+            const scaledPath = path.map(p => p * y.length);
 
             context.push({
                 type: 'scatter',
                 mode: 'lines+markers',
                 x: scaledPath,
-                y: scaledPath.map(
-                    p => this.getHeight2D(y, p)
-                ),
-                opacity: 1,
+                y: scaledPath.map(p => this.getHeight2D(y, p)),
+                opacity: 1
             });
-
         }
 
         Plotly.newPlot(this.div, context, this.layout);
@@ -89,11 +84,11 @@ class Plot {
          * @param path A list of (x, y) coordinates.
          */
         const context = [];
-
+        const frames = [];
         if (path) {
             const scaledPath = path.map(p => [
                 p[0] * data[0].length,
-                p[1] * data.length,
+                p[1] * data.length
             ]);
 
             const zOffset =
@@ -115,6 +110,19 @@ class Plot {
                     width: 6
                 }
             });
+            
+            if (scaledPath.length > 20) {
+                for (let i = 0; i < scaledPath.length - 10; i++) {
+                    const tempPath = scaledPath.slice(0, i+10);
+                    frames.push({data: [{
+                        x: tempPath.map(p => p[0]),
+                        y: tempPath.map(p => p[1]),
+                        z: tempPath.map(
+                            p => this.getHeight(data, p[0], p[1]) + zOffset
+                        )
+                    }, {}]});
+                }
+            }
         }
 
         context.push({
@@ -124,7 +132,19 @@ class Plot {
             showscale: false
         });
 
-        Plotly.newPlot(this.div, context, this.layout);
+        const obj = {
+            data: context,
+            frames: frames,
+            layout: this.layout
+        };
+
+        Plotly.newPlot(this.div, obj);
+        Plotly.animate(this.div, null, {
+            frame: { duration: 0, redraw: false },
+            transition: {
+                duration: 0
+              },
+        });
     }
 
     getHeight(data, xScaled, yScaled) {
@@ -161,10 +181,7 @@ class Plot {
 
         const grad = data[neighborX + 1] - neighborZ;
 
-        return (
-            neighborZ +
-            grad * (xScaled - neighborX)
-        );
+        return neighborZ + grad * (xScaled - neighborX);
     }
 }
 
