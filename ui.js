@@ -12,7 +12,7 @@ import {
     lossBox
 } from './templates.js';
 
-import { copyToClipboard, parseCSV } from './utils.js';
+import { copyToClipboard, parseCSV, isIncognito } from './utils.js';
 
 import Plot from './plot.js';
 
@@ -57,6 +57,7 @@ class UI {
         this.variables = [];
         this.messages = [];
         this.settings = {};
+        this.plotData = {};
 
         this.variableBoxDOM = document.getElementById('variableBox');
         this.messageBoxDOM = document.getElementById('messageBox');
@@ -68,10 +69,10 @@ class UI {
         this.lossBoxDOM = document.getElementById('lossBox');
         configureMathJax();
 
-        window.onload = () => {
+        window.onload = async () => {
             if (!document.cookie.split(';').filter(function(item) {
                 return item.trim().indexOf('visited=') == 0
-            }).length) {
+            }).length || await isIncognito) {
                 this.showModal();
                 document.cookie = 'visited=true';
             }
@@ -97,6 +98,8 @@ class UI {
     }
 
     showLossPlot(losses) {
+        this.plotData.loss = losses;
+
         render(lossBox(true, this.closeLossPlot.bind(this)), this.lossBoxDOM);
 
         let plot = new Plot('lossPlotBox', 'Training Loss', {
@@ -188,15 +191,14 @@ class UI {
         let dumpData = {
             variables:variables,
             settings:settings,
-            expression:this.getExpression()
+            expression:this.getExpression(),
+            plotData: this.plotData
         }
-
-        if (this.plotData) dumpData.plotData = this.plotData;
 
         let dump = encodeURIComponent(btoa(JSON.stringify(dumpData)));
 
         let base = window.location.href.split("#")[0];
-        let url = base + "#dump=" + dump;
+        let url = ".#dump=" + dump;
 
 
         copyToClipboard(url);
@@ -227,12 +229,17 @@ class UI {
         }, 10);
 
         if (data.plotData) {
+
             if (data.plotData.type === 'surface') {
                 this.setVisualizerPlotSurface(data.plotData.data, data.plotData.path);
-            } else {
+            } else if (data.plotData.type === 'line') {
                 this.setVisualizerPlotLine(data.plotData.x, data.plotData.y, data.plotData.path);
             }
+
+            if (data.plotData.loss) this.showLossPlot(data.plotData.loss);
         }
+
+        
     }
 
     refreshView() {
@@ -305,7 +312,9 @@ class UI {
     }
 
     setVisualizerPlotSurface(data, path = null) {
-        this.plotData = {'type':'surface', 'data':data, 'path':path};
+        this.plotData.type = 'surface';
+        this.plotData.data = data;
+        this.plotData.path = path;
 
         render(
             plotVisualizerBox(this.onCancel.bind(this)),
@@ -317,6 +326,10 @@ class UI {
 
     setVisualizerPlotLine(x, y, path = null) {
         this.plotData = {'type':'line', 'x':x, 'y':y, 'path':path};
+        this.plotData.type = 'line';
+        this.plotData.x = x;
+        this.plotData.y = y;
+        this.plotData.path = path;
 
         render(
             plotVisualizerBox(this.onCancel.bind(this)),

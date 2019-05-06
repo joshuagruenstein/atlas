@@ -9,6 +9,12 @@ export const copyToClipboard = str => {
     document.body.removeChild(el);
 };
 
+export const isIncognito = new Promise((resolve, reject) => {
+    let fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+    if (!fs) reject('Check incognito failed');
+    else fs(window.TEMPORARY, 100, ()=>resolve(false), ()=>resolve(true));
+});
+
 export const parseCSV = (str, type) => {
     let arr = [];
 

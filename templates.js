@@ -1,4 +1,5 @@
 import { html } from 'https://unpkg.com/lit-html?module';
+import examples from './examples.js';
 
 export const lossBox = (showLossBox, closeLossBox) => showLossBox ? html`
     <div class="panel">
@@ -87,15 +88,16 @@ export const modalBox = (active, closeModal) => html`
 
             <div class="modal-body">
                 <div class="content">
-                    Atlas is an optimization loss surface visualizer built as a
-                    final project for
-                    <a href="http://math.mit.edu/classes/18.065/2019SP/"
-                        >18.065: Matrix Methods In Data Analysis, Signal
-                        Processing, And Machine Learning</a
-                    >, taught by
-                    <a href="http://www-math.mit.edu/~gs/"
-                        >Professor Gill Strang</a
-                    >.
+                    Atlas is an optimization loss surface visualization tool, designed to provide greater transparency into high dimensional optimization processes.  To get started, you can click on one of the following examples, or close this modal for a blank canvas.
+
+                    <ul>
+                        ${Object.keys(examples).map((desc, index) =>
+                            html`<li><a href=${examples[desc]} @click=${() => {
+                                window.location.href = examples[desc];
+                                window.location.reload(true)}
+                            }>${desc}</a></li>`
+                        )}
+                    </ul>
                 </div>
             </div>
 
