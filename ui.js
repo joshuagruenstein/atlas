@@ -8,7 +8,8 @@ import {
     modalBox,
     variableBox,
     messageBox,
-    settingsBox
+    settingsBox,
+    lossBox
 } from './templates.js';
 
 import { copyToClipboard, parseCSV } from './utils.js';
@@ -64,6 +65,7 @@ class UI {
         this.modalBoxDOM = document.getElementById('modalBox');
         this.navbarBoxDOM = document.getElementById('navbarBox');
         this.expressionSourceDOM = document.getElementById("expressionSource");
+        this.lossBoxDOM = document.getElementById('lossBox');
         configureMathJax();
 
         window.onload = () => {
@@ -88,6 +90,20 @@ class UI {
         ] = this.settingsBoxDOM.children[0].children[5].children[0].value;
 
         this.refreshView();
+    }
+
+    closeLossPlot() {
+        render(lossBox(false, this.closeLossPlot.bind(this)), this.lossBoxDOM);
+    }
+
+    showLossPlot(losses) {
+        render(lossBox(true, this.closeLossPlot.bind(this)), this.lossBoxDOM);
+
+        let plot = new Plot('lossPlotBox', 'Training Loss', {
+            width:400,
+            height:300
+        });
+        plot.line([...Array(losses.length).keys()], losses, null);
     }
 
     typeChangeVariable(variable) {
@@ -463,7 +479,6 @@ class UI {
         for (let el of this.variableBoxDOM.children) {
             if (!el.variable) continue;
 
-            console.log("HELLO WORLD!");
             el.children[0].children[0].children[0].value = el.variable.name;
 
             el.getElementsByClassName(
