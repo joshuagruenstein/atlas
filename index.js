@@ -62,6 +62,7 @@ UI.setVisualizerStartHandler(() => {
         sqrt: /sqrt/,
         relu: /relu/,
         onehot: /onehot/,
+        softmax: /softmax/,
         underscore: /_/,
         comma: /,/,
         variable: {match: /[a-zA-Z]/, value: v => getVariable(v, varContext, usedVars)},
@@ -74,13 +75,14 @@ UI.setVisualizerStartHandler(() => {
         number: {match: /[0-9]+/, value: v => v},
     });
     try {
-        let tokens = Array.from(lexer.reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
-        let tfvars = Object.keys(usedVars).filter((v, i, a) => usedVars[v].match).map((v, i, a) => usedVars[v].tfvar);
+        const tokens = Array.from(lexer.reset(UI.getExpression())).filter((v, i, a) => v.type !== "WS");
+        const tfvars = Object.keys(usedVars).filter((v, i, a) => usedVars[v].match && usedVars[v].match.trainable).map((v, i, a) => usedVars[v].tfvar);
         const parser = new nearly.Parser(nearly.Grammar.fromCompiled(grammar));
         try {
             parser.feed(tokens);
             const f = parser.results[0];
             try {
+                console.log("generateLossSurfaceFromUI", tfvars, usedVars);
                 generateLossSurfaceFromUI(tfvars, f, UI.getSettings());
             }
             catch (err) {

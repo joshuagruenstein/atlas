@@ -19,6 +19,7 @@
     const tokenSqrt = {test: x => x.type === 'sqrt'};
     const tokenAbs = {test: x => x.type === 'abs'};
     const tokenOnehot = {test: x => x.type === 'onehot'};
+    const tokenSoftmax = {test: x => x.type === 'softmax'};
     const tokenUnderscore = {test: x => x.type === 'underscore'};
     const tokenComma = {test: x => x.type === 'comma'};
 %}
@@ -82,3 +83,5 @@ m -> %tokenMatrix {% ([m]) => (() => m.value.tfvar) %}
     | %tokenTanh %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.tanh(m())) %}
     | %tokenSqrt %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.sqrt(s())) %}
     | %tokenAbs mAS %tokenAbs {% ([l, s, r]) => (() => tf.abs(s())) %}
+    | %tokenSoftmax %tokenLparen mAS %tokenRparen {% ([f, l, s, r]) => (() => tf.softmax(s())) %}
+    | %tokenOnehot %tokenLparen mAS %tokenComma %tokenNumber %tokenRparen {% ([f, l, m, c, n, r]) => (() => tf.onehot(m(), parseFloat(n.value))) %}

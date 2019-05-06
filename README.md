@@ -2,6 +2,12 @@
 
 Interactive webapp for loss surface visualization.
 
+### Running Locally 
+
+npm install http-server
+http-server -p 18065
+http://localhost:18065/
+
 ### Possible Resources
 
  - Paper: [Visualizing the Loss Landscape of Neural Nets](https://papers.nips.cc/paper/7875-visualizing-the-loss-landscape-of-neural-nets)

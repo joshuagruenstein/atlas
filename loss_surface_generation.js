@@ -51,26 +51,31 @@ export async function generateLossSurfaceFromUI(trainableVariables, lossFunction
     await reportLossSurfaceGenerationProgress("All done! :) ", 1);
 
     if (lossData && lossData.lossSurface) {
+        console.log("losses", lossData.losses);
+        UI.showLossPlot(lossData.losses);
+
         if (lossData.lossSurface.every(row => (
             row.every((el, i) => el === lossData.lossSurface[0][i])
-        ))) UI.setVisualizerPlotLine(
-            [...Array(lossData.lossSurface[0].length).keys()],
-            lossData.lossSurface[0],
-            lossData.pathPositions.map(el => el[0])
-        );
-
-        else if (lossData.lossSurface.every(row => (
+        ))){
+             UI.setVisualizerPlotLine(
+                [...Array(lossData.lossSurface[0].length).keys()],
+                lossData.lossSurface[0],
+                lossData.pathPositions.map(el => el[0])
+            );
+        } else if (lossData.lossSurface.every(row => (
             row.every(el => el === row[0])
-        ))) UI.setVisualizerPlotLine(
-            [...Array(lossData.lossSurface.length).keys()],
-            lossData.lossSurface.map(row => row[0]),
-            lossData.pathPositions.map(el => el[1])
-        );
-
-        else UI.setVisualizerPlotSurface(
-            lossData.lossSurface,
-            lossData.pathPositions
-        );
+        ))) {
+            UI.setVisualizerPlotLine(
+                [...Array(lossData.lossSurface.length).keys()],
+                lossData.lossSurface.map(row => row[0]),
+                lossData.pathPositions.map(el => el[1])
+            );
+        } else {
+            UI.setVisualizerPlotSurface(
+                lossData.lossSurface,
+                lossData.pathPositions
+            );
+        }
     } else {
         UI.setVisualizerStart();
     }
@@ -117,7 +122,10 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
     await reportLossSurfaceGenerationProgress("Drawing plot ... ", 0, true);
 
     running = false;
-    return { lossSurface, pathPositions: percentPathPositions };
+    return { 
+        lossSurface, 
+        pathPositions: percentPathPositions,
+        losses: trainData.losses };
 }
 
 /**
@@ -352,11 +360,14 @@ function getOptimizer(learningParameters){
  */
 async function trainModel(model, data, labels, runPCA = false, showPath = false, learningParameters) {
     const weightVectors = [];
+    const losses = [];
 
     const optimizer = getOptimizer(learningParameters);
 
     for (let epoch = 0; epoch < learningParameters["epochs"]; epoch += 1) {
-        const loss = await optimizer.minimize(model.evaluate, true, model.getWeights()).data();
+        const loss = (await optimizer.minimize(model.evaluate, true, model.getWeights()).data())[0];
+
+        losses.push(loss);
 
         await reportLossSurfaceGenerationProgress("Training model", epoch / learningParameters["epochs"]);
         if (runPCA || showPath) {
@@ -380,12 +391,6 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
         }
     }
 
-    // await model.fit(data, labels, {
-    //   epochs: learningParameters["epochs"],
-    //   batchSize: 100,
-    //   callbacks: { onBatchEnd, onEpochEnd }
-    // });
-
     if (runPCA) {
         await reportLossSurfaceGenerationProgress("Running PCA (this page may freeze)", 0, true);
 
@@ -399,11 +404,13 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
 
         return {
             "pca": [vectorA, vectorB],
-            "weightVectors": weightVectors
+            "weightVectors": weightVectors,
+            "losses": losses
         };
     }else {
         return {
-          "weightVectors": weightVectors
+          "weightVectors": weightVectors,
+          "losses": losses
         };
     }
 }
