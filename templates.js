@@ -1,5 +1,14 @@
 import { html } from 'https://unpkg.com/lit-html?module';
 
+export const lossBox = (showLossBox, closeLossBox) => showLossBox ? html`
+    <div class="panel">
+        <div id="lossPlotBox" style="margin: 0 auto !important"></div>
+        <button class="btn btn-error m-2" @click=${closeLossBox}>
+            Close Plot
+        </button>
+    </div>
+` : '';
+
 export const navbarBox = (showModal, exportLink) => html`
     <section class="navbar-section">
         <a class="btn btn-action" href="#sidebar">
