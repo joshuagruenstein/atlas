@@ -110,17 +110,24 @@ class Plot {
                     width: 6
                 }
             });
-            
+
             if (scaledPath.length > 20) {
                 for (let i = 0; i < scaledPath.length - 10; i++) {
-                    const tempPath = scaledPath.slice(0, i+10);
-                    frames.push({data: [{
-                        x: tempPath.map(p => p[0]),
-                        y: tempPath.map(p => p[1]),
-                        z: tempPath.map(
-                            p => this.getHeight(data, p[0], p[1]) + zOffset
-                        )
-                    }, {}]});
+                    const tempPath = scaledPath.slice(0, i + 10);
+                    frames.push({
+                        data: [
+                            {
+                                x: tempPath.map(p => p[0]),
+                                y: tempPath.map(p => p[1]),
+                                z: tempPath.map(
+                                    p =>
+                                        this.getHeight(data, p[0], p[1]) +
+                                        zOffset
+                                )
+                            },
+                            {}
+                        ]
+                    });
                 }
             }
         }
@@ -139,12 +146,15 @@ class Plot {
         };
 
         Plotly.newPlot(this.div, obj);
-        Plotly.animate(this.div, null, {
-            frame: { duration: 0, redraw: false },
-            transition: {
-                duration: 0
-              },
-        });
+
+        if (path) {
+            Plotly.animate(this.div, null, {
+                frame: { duration: 0, redraw: false },
+                transition: {
+                    duration: 0
+                }
+            });
+        }
     }
 
     getHeight(data, xScaled, yScaled) {
