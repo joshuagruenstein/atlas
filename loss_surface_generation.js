@@ -1,4 +1,5 @@
 import UI from "./ui.js";
+import PCA from './libraries/pca.js';
 
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
 // https://www.youtube.com/watch?v=oHg5SJYRHA0
@@ -51,7 +52,6 @@ export async function generateLossSurfaceFromUI(trainableVariables, lossFunction
     await reportLossSurfaceGenerationProgress("All done! :) ", 1);
 
     if (lossData && lossData.lossSurface) {
-        console.log("losses", lossData.losses);
         UI.showLossPlot(lossData.losses);
 
         if (lossData.lossSurface.every(row => (
@@ -284,8 +284,6 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
 
     const lossSurface = [];
 
-    console.log( {bMin, bMax, aMin, aMax});
-
     for (let b = bMin; b < bMax; b += bStepSize) {
         const rowLosses = [];
         lossSurface.push(rowLosses);
@@ -309,7 +307,6 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
             }
         }
     }
-    console.log({lossSurface});
 
     // Compute path positions as percents along the a and b axes
     const percentPathPositions = pathPositions.map(p => 
@@ -392,15 +389,14 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
     }
 
     if (runPCA) {
-        await reportLossSurfaceGenerationProgress("Running PCA (this page may freeze)", 0, true);
+        await reportLossSurfaceGenerationProgress("Running PCA...", 0, true);
 
-        const weightVectorsOnCPU = await Promise.all(weightVectors.map(w => w.data()));
+        const pca = PCA(tf.stack(weightVectors), reportLossSurfaceGenerationProgress);
 
-        const pca = new PCA.getEigenVectors(weightVectorsOnCPU);
+        const vectorA = pca[0];
+        const vectorB = pca[1];
 
-        const vectorA = tf.tensor(pca[0].vector);
-        const vectorB = tf.tensor(pca[1].vector);
-        await reportLossSurfaceGenerationProgress("Running PCA", 1);
+        await reportLossSurfaceGenerationProgress("Finished PCA.", 1);
 
         return {
             "pca": [vectorA, vectorB],
