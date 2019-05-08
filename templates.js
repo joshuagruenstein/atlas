@@ -27,7 +27,7 @@ export const navbarBox = (showModal, exportLink) => html`
     </section>
     <section class="navbar-section">
         <button class="btn mr-2 btn-action" style="z-index:101" @click=${showModal}>
-            <i class="icon icon-emoji" data-tooltip="Examples"></i>
+            <i class="icon icon-emoji"></i>
         </button>
         <button class="btn ml-2 btn-action tooltip tooltip-left" data-tooltip="Share with a friend." @click=${exportLink}>
             <i class="icon icon-share"></i>
