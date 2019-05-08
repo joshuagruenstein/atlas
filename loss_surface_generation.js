@@ -43,7 +43,6 @@ export async function generateLossSurfaceFromUI(trainableVariables, lossFunction
         model,
         data,
         labels,
-        SETTINGS["usePCA"],
         SETTINGS["showPath"],
         SETTINGS["granularity"],
         SETTINGS
@@ -85,10 +84,11 @@ export async function generateLossSurfaceFromUI(trainableVariables, lossFunction
  * Generates a loss surface for our {model} on some {data} with {labels}.
  * First trains the model, then generates random vectors, then computes the weight surface.
  */
-async function generateLossSurface(model, data, labels, runPCA, showPath, granularity, learningParameters) {
+async function generateLossSurface(model, data, labels, showPath, granularity, learningParameters) {
     running = true;
 
-    const trainData = await trainModel(model, data, labels, runPCA, showPath, learningParameters);
+
+    const trainData = await trainModel(model, data, labels, showPath, learningParameters);
     if (!trainData) { // This could happen if trainModel was canceled.
         return;
     }
@@ -103,8 +103,8 @@ async function generateLossSurface(model, data, labels, runPCA, showPath, granul
         normalizedA = tf.tensor([1, 0]);
         normalizedB = tf.tensor([0, 1]);
     } else {
-        const weightVectorA = runPCA ? trainData["pca"][0] : await randomNormalizedWeightVector(model);
-        const weightVectorB = runPCA ? trainData["pca"][1] : await randomNormalizedWeightVector(model);
+        const weightVectorA = trainData["pca"][0];
+        const weightVectorB = trainData["pca"][1];
 
         normalizedA = weightVectorA.div(weightVectorA.norm(2));
         normalizedB = weightVectorB.div(weightVectorB.norm(2));
@@ -355,7 +355,7 @@ function getOptimizer(learningParameters){
 /**
  * Train the model.
  */
-async function trainModel(model, data, labels, runPCA = false, showPath = false, learningParameters) {
+async function trainModel(model, data, labels, showPath = false, learningParameters) {
     const weightVectors = [];
     const losses = [];
 
@@ -367,9 +367,7 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
         losses.push(loss);
 
         await reportLossSurfaceGenerationProgress("Training model", epoch / learningParameters["epochs"]);
-        if (runPCA || showPath) {
-            weightVectors.push(await modelWeightsToWeightVector(model));
-        }
+        weightVectors.push(await modelWeightsToWeightVector(model));
 
         // TODO:
         if (loss < -MAX_LOSS_VALUE) {
@@ -388,7 +386,10 @@ async function trainModel(model, data, labels, runPCA = false, showPath = false,
         }
     }
 
-    if (runPCA) {
+    console.log("WEIGHT VECTORS")
+    console.log(weightVectors[0].shape);
+
+    if (weightVectors[0].shape[0] >= 3) {
         await reportLossSurfaceGenerationProgress("Running PCA...", 0, true);
 
         const pca = PCA(tf.stack(weightVectors), reportLossSurfaceGenerationProgress);

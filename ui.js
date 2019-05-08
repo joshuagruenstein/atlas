@@ -88,7 +88,7 @@ class UI {
     changeOptimizer() {
         this.settings[
             'optimizer'
-        ] = this.settingsBoxDOM.children[0].children[5].children[0].value;
+        ] = this.settingsBoxDOM.children[0].children[4].children[0].value;
 
         this.refreshView();
     }
@@ -198,12 +198,12 @@ class UI {
         let dump = encodeURIComponent(btoa(JSON.stringify(dumpData)));
 
         let base = window.location.href.split("#")[0];
-        let url = ".#dump=" + dump;
+        let linkUrl = ".#dump=" + dump;
+        let clipboardUrl = base + "#dump=" + dump;
 
+        copyToClipboard(clipboardUrl);
 
-        copyToClipboard(url);
-
-        this.renderSuccess(html`Copied <a href='${url}'>sharing URL</a> to clipboard.`);
+        this.renderSuccess(html`Copied <a href='${linkUrl}'>sharing URL</a> to clipboard.`);
 
     }
 
@@ -355,11 +355,8 @@ class UI {
             'showPath'
         ] = this.settingsBoxDOM.children[0].children[2].children[0].children[0].checked;
 
-        this.settings[
-            'usePCA'
-        ] = this.settingsBoxDOM.children[0].children[3].children[0].children[0].checked;
 
-        let lr = this.settingsBoxDOM.children[0].children[6].children[0]
+        let lr = this.settingsBoxDOM.children[0].children[5].children[0]
             .children[1].value;
         if (lr === "" || isNaN(lr) || parseFloat(lr) < 0)
             return this.renderError(
@@ -369,7 +366,7 @@ class UI {
         this.settings['learningRate'] = parseFloat(lr);
 
         if (this.settings['optimizer'] === 'Momentum') {
-            let momentum = this.settingsBoxDOM.children[0].children[7]
+            let momentum = this.settingsBoxDOM.children[0].children[6]
                 .children[0].children[1].value;
             if (momentum === "" ||isNaN(momentum) || parseFloat(momentum) < 0)
                 return this.renderError(
@@ -379,7 +376,7 @@ class UI {
         } else delete this.settings.momentum;
 
         let epochs = this.settingsBoxDOM.children[0].children[
-            this.settings['optimizer'] === 'Momentum' ? 8 : 7
+            this.settings['optimizer'] === 'Momentum' ? 7 : 6
         ].children[0].children[1].value;
 
         if (epochs === "" || isNaN(epochs) || parseInt(epochs) < 0)
@@ -517,20 +514,18 @@ class UI {
 
         this.settingsBoxDOM.children[0].children[2].children[0].children[0].checked = this.settings.showPath;
 
-        this.settingsBoxDOM.children[0].children[3].children[0].children[0].checked = this.settings.usePCA;
+        this.settingsBoxDOM.children[0].children[5].children[0].children[1].value = this.settings.learningRate;
 
-        this.settingsBoxDOM.children[0].children[6].children[0].children[1].value = this.settings.learningRate;
-
-        this.settingsBoxDOM.children[0].children[5].children[0].value = this.settings.optimizer;
+        this.settingsBoxDOM.children[0].children[4].children[0].value = this.settings.optimizer;
 
         this.refreshView();
 
         if (this.settings['optimizer'] === 'Momentum') {
-            this.settingsBoxDOM.children[0].children[7].children[0].children[1].value = this.settings.momentum;
+            this.settingsBoxDOM.children[0].children[6].children[0].children[1].value = this.settings.momentum;
         }
 
         this.settingsBoxDOM.children[0].children[
-            this.settings['optimizer'] === 'Momentum' ? 8 : 7
+            this.settings['optimizer'] === 'Momentum' ? 7 : 6
         ].children[0].children[1].value = this.settings.epochs;
 
     }

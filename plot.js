@@ -27,6 +27,9 @@ const baseLayout = {
             title: {
                 text: 'Cost'
             }
+        },
+        camera: {
+            eye: {x: 0, y: 0}
         }
     }
 };
@@ -136,7 +139,15 @@ class Plot {
             z: data,
             type: 'surface',
             colorscale: 'Viridis',
-            showscale: false
+            showscale: false,
+            contours: {
+                z: {
+                  show:true,
+                  usecolormap: true,
+                  highlightcolor:"#42f462",
+                  project:{z: true}
+                }
+              }
         });
 
         const obj = {

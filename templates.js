@@ -281,14 +281,6 @@ export const settingsBox = (settings, changeOptimizer) => html`
             </label>
         </li>
 
-        <li class="menu-item">
-            <label class="form-switch">
-                <input type="checkbox"/>
-
-                <i class="form-icon"></i> Use PCA directions
-            </label>
-        </li>
-
         <li class="divider" data-content="OPTIMIZER"></li>
 
         <li class="menu-item">
