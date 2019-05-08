@@ -41,6 +41,7 @@ const configureMathJax = () => {
                 ]);
             });
 
+            expressionSource.dispatchEvent(new Event('input'));
             window.MathJaxInitialized = true;
         });
 
