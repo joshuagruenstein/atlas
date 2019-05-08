@@ -101,7 +101,12 @@ export const modalBox = (active, closeModal) => html`
             <div class="modal-body">
                 <div class="content">
                     Atlas is an optimization loss surface visualization tool, designed to provide greater transparency into high dimensional optimization processes.  To get started, you can click on one of the following examples, or close this modal for a blank canvas.
+                    <br/><br/>
 
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/tsSy1XK1wBA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <br/><br/>
+
+                    Examples:
                     <ul>
                         ${Object.keys(examples).map((desc, index) =>
                             html`<li><a href=${examples[desc]} @click=${() => {
@@ -111,7 +116,7 @@ export const modalBox = (active, closeModal) => html`
                         )}
                     </ul>
                 </div>
-            </div>
+            </div>            
 
             <div class="modal-footer">
                 Created by
