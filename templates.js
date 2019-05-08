@@ -19,7 +19,7 @@ export const navbarBox = (showModal, exportLink) => html`
     <section class="navbar-center">
         <span class="navbar-group">
             <a href="/">
-                <div class="text-primary">
+                <div class="text-primary nav-title">
                     Atlas
                 </div>
             </a>
