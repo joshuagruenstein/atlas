@@ -215,7 +215,7 @@ class UI {
             plotData: this.plotData
         }
 
-        let dump = encodeURIComponent(btoa(JSON.stringify(dumpData)));
+        let dump = encodeURIComponent(btoa(pako.deflate(JSON.stringify(dumpData),{ level:9, to: 'string' })));
 
         let base = window.location.href.split("#")[0];
         let linkUrl = ".#dump=" + dump;
@@ -228,12 +228,23 @@ class UI {
     }
 
     setStateFromURL() {
-
         let url = window.location.href.split("#");
 
-        let dump = atob(decodeURIComponent(url[1].substring(5)));
-        let data = JSON.parse(dump);
+        let dump = null;
 
+        try {
+            dump = pako.inflate(atob(decodeURIComponent(url[1].substring(5))),{ to: 'string' });
+        } catch (error) {
+            if (error === "incorrect header check") {
+                dump = atob(decodeURIComponent(url[1].substring(5)));
+            } else {
+                console.log(error);
+                return;
+            }
+        }
+
+        let data = JSON.parse(dump);
+        
         this.settings = data.settings;
         this.variables = data.variables;
 
