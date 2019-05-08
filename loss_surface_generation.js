@@ -362,7 +362,14 @@ async function trainModel(model, data, labels, showPath = false, learningParamet
     const optimizer = getOptimizer(learningParameters);
 
     for (let epoch = 0; epoch < learningParameters["epochs"]; epoch += 1) {
-        const loss = (await optimizer.minimize(model.evaluate, true, model.getWeights()).data())[0];
+        let loss = null;
+        
+        try {
+            loss = (await optimizer.minimize(model.evaluate, true, model.getWeights()).data())[0];
+        } catch (error) {
+            UI.renderError(error);
+            return;
+        } 
 
         losses.push(loss);
 
@@ -385,9 +392,6 @@ async function trainModel(model, data, labels, showPath = false, learningParamet
             return;
         }
     }
-
-    console.log("WEIGHT VECTORS")
-    console.log(weightVectors[0].shape);
 
     if (weightVectors[0].shape[0] >= 3) {
         await reportLossSurfaceGenerationProgress("Running PCA...", 0, true);
