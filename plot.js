@@ -27,6 +27,9 @@ const baseLayout = {
             title: {
                 text: 'Cost'
             }
+        },
+        camera: {
+            eye: {x: 0, y: 0}
         }
     }
 };
