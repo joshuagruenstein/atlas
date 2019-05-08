@@ -20,3 +20,17 @@ body, html, #main {
 #plotBox {
     margin: 0 auto;
 }
+
+.navbar-group{
+    text-align: center;
+}
+
+.text-primary{
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.navbar-links > a{
+    margin-left: 10px;
+    margin-right: 10px;
+}

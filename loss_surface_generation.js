@@ -211,7 +211,7 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
     let aMax, aMin, bMax, bMin;
 
     // // Stretching
-    const lossSurfaceDimensions = "square_around_optimum";
+    const lossSurfaceDimensions = "square_around_optimum_scaled_to_trajectory";
 
     switch (lossSurfaceDimensions) {
         case "square_around_optimum":

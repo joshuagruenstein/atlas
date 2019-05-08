@@ -17,11 +17,23 @@ export const navbarBox = (showModal, exportLink) => html`
         ></a>
     </section>
     <section class="navbar-center">
-        <span class="text-primary">Atlas</span>
+        <span class="navbar-group">
+            <a href="/">
+                <div class="text-primary">
+                    Atlas
+                </div>
+            </a>
+            <div class="navbar-links">
+                <a href="#" @click=${showModal}>Examples</a>
+                <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Overview Video</a>
+                <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Writeups</a>
+                <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Source Paper</a>
+            </div>
+        </span>
     </section>
     <section class="navbar-section">
         <button class="btn mr-2 btn-action" @click=${showModal}>
-            <i class="icon icon-emoji"></i>
+            <i class="icon icon-emoji" data-tooltip="Examples"></i>
         </button>
         <button class="btn ml-2 btn-action tooltip tooltip-left" data-tooltip="Share with a friend." @click=${exportLink}>
             <i class="icon icon-share"></i>
