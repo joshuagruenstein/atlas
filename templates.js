@@ -2,7 +2,7 @@ import { html } from 'https://unpkg.com/lit-html?module';
 import examples from './examples.js';
 
 export const lossBox = (showLossBox, closeLossBox) => showLossBox ? html`
-    <div class="menu">
+    <ul class="menu panel">
         <div id="lossPlotBox" style="margin: 0 auto !important"></div>
         <button class="btn btn-error m-2" @click=${closeLossBox}>
             Close Plot
@@ -26,7 +26,7 @@ export const navbarBox = (showModal, exportLink) => html`
         </span>
     </section>
     <section class="navbar-section">
-        <button class="btn mr-2 btn-action" style="z-index:101" @click=${showModal}>
+        <button class="btn mr-2 btn-action tooltip tooltip-left" data-tooltip="About" style="z-index:101" @click=${showModal}>
             <i class="icon icon-emoji"></i>
         </button>
         <button class="btn ml-2 btn-action tooltip tooltip-left" data-tooltip="Share with a friend." @click=${exportLink}>
@@ -265,7 +265,7 @@ export const scratchBox = (scratch, onChange) => html`
                 Scratchpad
             </label>
             <div class="accordion-body">
-                <textarea style="width:100%" class="form-input mt-2 input-md" rows="3" @change=${onChange}>${scratch}</textarea>
+                <textarea style="width:100%" placeholder="Use this scratchpad for notes." class="form-input mt-2 input-md" rows="3" @change=${onChange}>${scratch}</textarea>
             </div>
         </div>
     </div>
