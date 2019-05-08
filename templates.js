@@ -10,6 +10,12 @@ export const lossBox = (showLossBox, closeLossBox) => showLossBox ? html`
     </div>
 ` : '';
 
+export const loadingBox = isLoading => html`
+    <div id="loadingScreen" style="display:${isLoading?'flex':'none'}">
+        <div class="loading loading-lg"></div>
+    </div>
+`
+
 export const navbarBox = (showModal, exportLink) => html`
     <section class="navbar-section">
         <a class="btn btn-action" href="#sidebar">
@@ -18,7 +24,7 @@ export const navbarBox = (showModal, exportLink) => html`
     </section>
     <section class="navbar-center">
         <span class="navbar-group">
-            <a href="/">
+            <a href="#" @click=${() => { window.location.href = window.location.href.split("#")[0]; }}>
                 <div class="text-primary nav-title">
                     Atlas
                 </div>

@@ -10,7 +10,8 @@ import {
     messageBox,
     settingsBox,
     lossBox,
-    scratchBox
+    scratchBox,
+    loadingBox
 } from './templates.js';
 
 import { copyToClipboard, parseCSV, isIncognito } from './utils.js';
@@ -69,8 +70,14 @@ class UI {
         this.expressionSourceDOM = document.getElementById("expressionSource");
         this.lossBoxDOM = document.getElementById('lossBox');
         this.scratchBoxDOM = document.getElementById('scratchBox');
+        this.loadingBoxDOM = document.getElementById('loadingBox');
         configureMathJax();
 
+        const url = window.location.href.split("#");
+        const hasDump = !(url.length !== 2 || url[1].substring(0,5) !== 'dump=');
+
+        if (hasDump) render(loadingBox(true), this.loadingBoxDOM);
+        
         window.onload = async () => {
             if (!document.cookie.split(';').filter(function(item) {
                 return item.trim().indexOf('visited=') == 0
@@ -83,7 +90,10 @@ class UI {
             this.refreshView();
             if (this.onLoad) this.onLoad();
 
-            this.setStateFromURL();
+            if (hasDump) {
+                this.setStateFromURL();
+                render(loadingBox(false), this.loadingBoxDOM);
+            }
         };
     }
 
@@ -212,8 +222,6 @@ class UI {
     setStateFromURL() {
         let url = window.location.href.split("#");
 
-        if (url.length !== 2 || url[1].substring(0,5) !== 'dump=') return;
-
         let dump = atob(decodeURIComponent(url[1].substring(5)));
         let data = JSON.parse(dump);
 
@@ -240,8 +248,6 @@ class UI {
 
             if (data.plotData.loss) this.showLossPlot(data.plotData.loss);
         }
-
-        
     }
 
     refreshView() {

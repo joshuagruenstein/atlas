@@ -30,6 +30,19 @@ body, html, #main {
     margin-bottom: 10px;
 }
 
+#loadingScreen {
+    position:fixed;
+    text-align:center;
+    width:100%;
+    height:100%;
+    z-index:100000;
+    background-color:rgba(0,0,0,.2);
+
+    justify-content:center;
+    align-content:center;
+    flex-direction:column;
+}
+
 .modal {
     display:flex !important;
     opacity:0 !important;
