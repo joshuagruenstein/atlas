@@ -59,7 +59,7 @@ export async function generateLossSurfaceFromUI(trainableVariables, lossFunction
              UI.setVisualizerPlotLine(
                 [...Array(lossData.lossSurface[0].length).keys()],
                 lossData.lossSurface[0],
-                lossData.pathPositions.map(el => el[0])
+                SETTINGS.showPath?lossData.pathPositions.map(el => el[0]):null
             );
         } else if (lossData.lossSurface.every(row => (
             row.every(el => el === row[0])
@@ -67,12 +67,12 @@ export async function generateLossSurfaceFromUI(trainableVariables, lossFunction
             UI.setVisualizerPlotLine(
                 [...Array(lossData.lossSurface.length).keys()],
                 lossData.lossSurface.map(row => row[0]),
-                lossData.pathPositions.map(el => el[1])
+                SETTINGS.showPath?lossData.pathPositions.map(el => el[1]):null
             );
         } else {
             UI.setVisualizerPlotSurface(
                 lossData.lossSurface,
-                lossData.pathPositions
+                SETTINGS.showPath?lossData.pathPositions:null
             );
         }
     } else {
@@ -110,7 +110,7 @@ async function generateLossSurface(model, data, labels, showPath, granularity, l
         normalizedB = weightVectorB.div(weightVectorB.norm(2));
     }     
 
-    const pathPositions = showPath ? await computeWeightTrajectoryPositions(trainData["weightVectors"], optimalWeightVector, normalizedA, normalizedB) : null;
+    const pathPositions = await computeWeightTrajectoryPositions(trainData["weightVectors"], optimalWeightVector, normalizedA, normalizedB);
 
     const lossData = await computeLossSurface(model, data, labels, optimalWeightVector, normalizedA, normalizedB, granularity, pathPositions);
     if (!lossData) { // This could happen if trainModel was canceled.
