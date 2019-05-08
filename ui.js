@@ -198,12 +198,12 @@ class UI {
         let dump = encodeURIComponent(btoa(JSON.stringify(dumpData)));
 
         let base = window.location.href.split("#")[0];
-        let url = ".#dump=" + dump;
+        let linkUrl = ".#dump=" + dump;
+        let clipboardUrl = base + "#dump=" + dump;
 
+        copyToClipboard(clipboardUrl);
 
-        copyToClipboard(url);
-
-        this.renderSuccess(html`Copied <a href='${url}'>sharing URL</a> to clipboard.`);
+        this.renderSuccess(html`Copied <a href='${linkUrl}'>sharing URL</a> to clipboard.`);
 
     }
 
