@@ -23,22 +23,29 @@ const FUNCTIONS = ['relu', 'onehot', 'softmax', 'sigmoid'];
 const configureMathJax = () => {
     if (!window.MathJax) window.MathJax = {};
 
-    window.MathJax.AuthorInit = function() {
-        MathJax.Hub.Register.StartupHook('End', function() {
+    window.MathJax.AuthorInit = () => {
+        MathJax.Hub.Register.StartupHook('End', () => {
             MathJax.Hub.processSectionDelay = 0;
-            let expressionSource = document.getElementById('expressionSource');
-            let expressionRendering = document.getElementById('expressionRendering');
-            expressionRendering.style.color = "#000";
-            let math = MathJax.Hub.getAllJax('expressionRendering')[0];
-            expressionSource.addEventListener('input', function() {
-                MathJax.Hub.Queue(['Text', math, expressionSource.value]);
+
+            const expressionSource = document.getElementById('expressionSource');
+            const expressionRendering = document.getElementById('expressionRendering');
+
+            MathJax.Hub.Queue(['Typeset', MathJax.Hub, 'expressionRendering']);
+            
+            expressionSource.addEventListener('input', () => {
+                expressionRendering.style.color = "#000";
+                MathJax.Hub.Queue([
+                    'Text', 
+                    MathJax.Hub.getAllJax('expressionRendering')[0], 
+                    expressionSource.value
+                ]);
             });
 
             window.MathJaxInitialized = true;
         });
 
-        MathJax.Hub.Register.StartupHook('AsciiMath Jax Ready', function () {
-            let AM = MathJax.InputJax.AsciiMath.AM;
+        MathJax.Hub.Register.StartupHook('AsciiMath Jax Ready', () => {
+            const AM = MathJax.InputJax.AsciiMath.AM;
 
             for (let f of FUNCTIONS) AM.newsymbol({
                 input:f,
@@ -55,7 +62,7 @@ const configureMathJax = () => {
 }
 
 class UI {
-    constructor() {        
+    constructor() { 
         this.variables = [];
         this.messages = [];
         this.settings = {};
@@ -220,6 +227,7 @@ class UI {
     }
 
     setStateFromURL() {
+
         let url = window.location.href.split("#");
 
         let dump = atob(decodeURIComponent(url[1].substring(5)));
@@ -231,13 +239,6 @@ class UI {
         this.setVariables();
         this.setSettings();
 
-        let kill = setInterval(() => {
-            if (window.MathJaxInitialized) {
-                this.setExpression(data.expression);
-                clearInterval(kill);
-            }
-        }, 10);
-
         if (data.plotData) {
 
             if (data.plotData.type === 'surface') {
@@ -248,6 +249,8 @@ class UI {
 
             if (data.plotData.loss) this.showLossPlot(data.plotData.loss);
         }
+
+        this.setExpression(data.expression);
     }
 
     refreshView() {
@@ -550,7 +553,7 @@ class UI {
 
     setExpression(expression) {
         this.expressionSourceDOM.value = expression;
-        this.expressionSourceDOM.dispatchEvent(new Event('input'));
+        this.expressionSourceDOM.dispatchEvent(new Event('input'));        
     }
 
 }
