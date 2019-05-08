@@ -112,8 +112,8 @@ class Plot {
             });
 
             if (scaledPath.length > 20) {
-                for (let i = 0; i < scaledPath.length - 10; i++) {
-                    const tempPath = scaledPath.slice(0, i + 10);
+                for (let i = 0; i < 20; i++) {
+                    const tempPath = scaledPath.slice(0, scaledPath.length / 19 * i);
                     frames.push({
                         data: [
                             {
