@@ -2,7 +2,7 @@ import { html } from 'https://unpkg.com/lit-html?module';
 import examples from './examples.js';
 
 export const lossBox = (showLossBox, closeLossBox) => showLossBox ? html`
-    <div class="panel">
+    <div class="menu">
         <div id="lossPlotBox" style="margin: 0 auto !important"></div>
         <button class="btn btn-error m-2" @click=${closeLossBox}>
             Close Plot
@@ -23,16 +23,10 @@ export const navbarBox = (showModal, exportLink) => html`
                     Atlas
                 </div>
             </a>
-            <div class="navbar-links">
-                <a href="#" @click=${showModal}>Examples</a>
-                <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Overview Video</a>
-                <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Writeups</a>
-                <a href="https://www.youtube.com/watch?v=oHg5SJYRHA0">Source Paper</a>
-            </div>
         </span>
     </section>
     <section class="navbar-section">
-        <button class="btn mr-2 btn-action" @click=${showModal}>
+        <button class="btn mr-2 btn-action" style="z-index:101" @click=${showModal}>
             <i class="icon icon-emoji" data-tooltip="Examples"></i>
         </button>
         <button class="btn ml-2 btn-action tooltip tooltip-left" data-tooltip="Share with a friend." @click=${exportLink}>
@@ -261,6 +255,21 @@ export const variableBox = (
 export const messageBox = (messages, deleteMessage) => html`
     ${messages.map(m => message(m, deleteMessage))}
 `;
+
+export const scratchBox = (scratch, onChange) => html`
+    <div class="menu">
+        <div class="accordion">
+            <input type="checkbox" id="scratchpad-accordian" checked hidden>
+            <label class="accordion-header" for="scratchpad-accordian">
+                <i class="icon icon-arrow-right mr-1"></i>
+                Scratchpad
+            </label>
+            <div class="accordion-body">
+                <textarea style="width:100%" class="form-input mt-2 input-md" rows="3" @change=${onChange}>${scratch}</textarea>
+            </div>
+        </div>
+    </div>
+`
 
 export const settingsBox = (settings, changeOptimizer) => html`
     <ul class="menu">

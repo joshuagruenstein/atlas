@@ -9,7 +9,8 @@ import {
     variableBox,
     messageBox,
     settingsBox,
-    lossBox
+    lossBox,
+    scratchBox
 } from './templates.js';
 
 import { copyToClipboard, parseCSV, isIncognito } from './utils.js';
@@ -67,6 +68,7 @@ class UI {
         this.navbarBoxDOM = document.getElementById('navbarBox');
         this.expressionSourceDOM = document.getElementById("expressionSource");
         this.lossBoxDOM = document.getElementById('lossBox');
+        this.scratchBoxDOM = document.getElementById('scratchBox');
         configureMathJax();
 
         window.onload = async () => {
@@ -263,6 +265,16 @@ class UI {
             messageBox(this.messages, this.deleteMessage.bind(this)),
             this.messageBoxDOM
         );
+
+        render(
+            scratchBox(this.settings.scratch, this.changeScratch.bind(this)),
+            this.scratchBoxDOM
+        );
+    }
+
+    changeScratch() {
+        let newVal = this.scratchBoxDOM.children[0].children[0].children[2].children[0].value;
+        this.settings.scratch = newVal;
     }
 
     closeModal() {

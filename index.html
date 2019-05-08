@@ -37,20 +37,23 @@
 
         <header class="navbar p-2" id="navbarBox"></header>
 
-        <div class="container" id="messageBox"></div>
-
         <div class="container">
-        
             <div class="columns">
+
+                <div class="column col-12" id="messageBox"></div>
+
                 <div class="column col-12">
                     <textarea class="form-input mt-2 input-lg" rows="3" placeholder="Type expression to minimize here" id="expressionSource"></textarea>
-                    <div class="text-center" id="expressionRendering" style="color:#fff">``</div>
+                </div>
+                
+                <div class="text-center column col-12" id="expressionRendering" style="color:#fff">``</div>
+            
+                <div class="column col-xs-8">
+                    <div id="visualizerBox"></div>
+                    <div class='mt-2 mb-2' id="scratchBox"></div>
                 </div>
 
-
-                <div class="column col-md-9" id="visualizerBox"></div>
-
-                <div class="column col-md-3">
+                <div class="column col-xs-4">
                     <div id='settingsBox'></div>
                      <div class="mt-2" id="lossBox"></div>
                 </div>
@@ -60,6 +63,7 @@
         </div>
 
     </div>
+
 </div>
 
 <script type="module" src="index.js"></script>

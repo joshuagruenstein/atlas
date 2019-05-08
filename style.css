@@ -30,7 +30,23 @@ body, html, #main {
     margin-bottom: 10px;
 }
 
-.navbar-links > a{
-    margin-left: 10px;
-    margin-right: 10px;
+.modal {
+    display:flex !important;
+    opacity:0 !important;
+    z-index:100;
+
+    transition: width 0.4s, height 0.4s, top 0.4s, left 0.4s, opacity 0.5s;
+    width:0px;
+    height:0px;
+    top:50px;
+
+    left:calc(100% - 100px);
+}
+
+.modal.active {
+    width:100% !important;
+    height:100% !important;
+    left: 0 !important;
+    top: 0 !important;
+    opacity:1 !important;
 }
