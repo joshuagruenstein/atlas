@@ -42,7 +42,7 @@ class Plot {
          * @param layout Specific layout info.
          */
         this.div = div;
-        this.layout = baseLayout;
+        this.layout = JSON.parse(JSON.stringify(baseLayout));
         this.layout['title'] = title;
 
         for (const prop in layout) {
