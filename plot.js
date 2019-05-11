@@ -29,7 +29,7 @@ const baseLayout = {
             }
         },
         camera: {
-            eye: {x: 0, y: 0}
+            eye: { x: 0, y: 0 }
         }
     }
 };
@@ -61,14 +61,15 @@ class Plot {
             {
                 x: x,
                 y: y,
-                type: 'scatter',
-                colorscale: 'YIGnBu'
+                type: 'scatter'
             }
         ];
+        const frames = [];
 
         if (path) {
             const scaledPath = path.map(p => p * y.length);
-
+            console.log(scaledPath.length);
+            console.log([...Array(scaledPath.length).keys()]);
             context.push({
                 type: 'scatter',
                 mode: 'lines+markers',
@@ -76,9 +77,42 @@ class Plot {
                 y: scaledPath.map(p => this.getHeight2D(y, p)),
                 opacity: 1
             });
+
+            if (scaledPath.length > 20) {
+                for (let i = 0; i < 20; i++) {
+                    const tempPath = scaledPath.slice(
+                        0,
+                        (scaledPath.length / 19) * i
+                    );
+                    frames.push({
+                        data: [
+                            {},
+                            {
+                                x: tempPath,
+                                y: tempPath.map(p => this.getHeight2D(y, p))
+                            }
+                        ]
+                    });
+                }
+            }
         }
 
-        Plotly.newPlot(this.div, context, this.layout);
+        const obj = {
+            data: context,
+            frames: frames,
+            layout: this.layout
+        };
+
+        Plotly.newPlot(this.div, obj);
+
+        if (path) {
+            Plotly.animate(this.div, null, {
+                frame: { duration: 0, redraw: false },
+                transition: {
+                    duration: 0
+                }
+            });
+        }
     }
 
     surface(data, path) {
@@ -116,7 +150,10 @@ class Plot {
 
             if (scaledPath.length > 20) {
                 for (let i = 0; i < 20; i++) {
-                    const tempPath = scaledPath.slice(0, scaledPath.length / 19 * i);
+                    const tempPath = scaledPath.slice(
+                        0,
+                        (scaledPath.length / 19) * i
+                    );
                     frames.push({
                         data: [
                             {
@@ -142,12 +179,12 @@ class Plot {
             showscale: false,
             contours: {
                 z: {
-                  show:true,
-                  usecolormap: true,
-                  highlightcolor:"#42f462",
-                  project:{z: true}
+                    show: true,
+                    usecolormap: true,
+                    highlightcolor: '#42f462',
+                    project: { z: true }
                 }
-              }
+            }
         });
 
         const obj = {
