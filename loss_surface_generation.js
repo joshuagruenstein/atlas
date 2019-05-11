@@ -273,8 +273,9 @@ async function computeLossSurface(model, data, labels, optimalWeightVector, rand
     }
 
     // Add padding around our region to make sure we're not too close to our trajectory
-    const aStepSize = (aMax - aMin) / granularity;
-    const bStepSize = (bMax - bMin) / granularity;
+    const ifZeroMakeOne = num => num == 0 ? 1 : num;
+    const aStepSize = ifZeroMakeOne((aMax - aMin) / granularity);
+    const bStepSize =  ifZeroMakeOne((bMax - bMin) / granularity);
 
     aMin -= aStepSize;
     aMax += aStepSize * 2;

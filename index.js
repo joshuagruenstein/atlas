@@ -36,11 +36,11 @@ function getVariable(varName, varContext, usedVars) {
 function makeTfVar(v) {
     switch (v.type) {
         case "Scalar":
-            return v.trainable ? tf.scalar(Math.random()).variable() : tf.scalar(v.data);
+            return v.trainable ? tf.randomNormal([]).variable() : tf.scalar(v.data);
         case "Vector":
-            return v.trainable ? tf.randomUniform([v.length, 1]).variable() : tf.tensor1d(v.data).reshape([v.length, 1]);
+            return v.trainable ? tf.randomNormal([v.length, 1]).variable() : tf.tensor1d(v.data).reshape([v.length, 1]);
         case "Matrix":
-            return v.trainable ? tf.randomUniform(v.shape).variable() : tf.tensor2d(v.data);
+            return v.trainable ? tf.randomNormal(v.shape).variable() : tf.tensor2d(v.data);
         default:
             return null;
     }
