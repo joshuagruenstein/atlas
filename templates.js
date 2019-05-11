@@ -115,9 +115,9 @@ export const modalBox = (active, closeModal) => html`
                             }>${desc}</a></li>`
                         )}
                     </ul>
-                    <a href="https://papers.nips.cc/paper/7875-visualizing-the-loss-landscape-of-neural-nets.pdf" target="_blank">
-                        Original Paper: Visualizing the loss landscape of neural nets, Li et. al
-                    </a>
+                    This website was inspired by <em><a href="https://papers.nips.cc/paper/7875-visualizing-the-loss-landscape-of-neural-nets.pdf" target="_blank"></em>
+                        Visualizing the Loss Landscape of Neural Nets
+                    </a> by Li et al.  You can read our writeup <a href="https://github.com/joshuagruenstein/atlas/raw/master/paper/main.pdf" target="_blank">here</a> or look at our source on <a href="https://github.com/joshuagruenstein/atlas">Github</a>.
                     <br/>
                 </div>
             </div>            
