@@ -280,7 +280,7 @@ export const scratchBox = (scratch, onChange) => html`
                 Scratchpad
             </label>
             <div class="accordion-body">
-                <textarea style="width:100%" placeholder="Use this scratchpad for notes." class="form-input mt-2 input-md" rows="3" @change=${onChange}>${scratch}</textarea>
+                <textarea style="width:100%" placeholder="Use this scratchpad for notes." class="form-input mt-2 input-md" rows="6" @change=${onChange}>${scratch}</textarea>
             </div>
         </div>
     </div>
