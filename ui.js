@@ -1,4 +1,5 @@
 import { html, render } from 'https://unpkg.com/lit-html?module';
+import examples from './examples.js';
 
 import {
     navbarBox,
@@ -101,6 +102,9 @@ class UI {
             if (hasDump) {
                 this.setStateFromURL();
                 render(loadingBox(false), this.loadingBoxDOM);
+            } else {
+                console.log("SET STATE FROM DUMP STRING");
+                this.setStateFromDumpString(examples["Simple two-scalar bowl with gradient descent."].substring(7));
             }
         };
     }
@@ -229,14 +233,17 @@ class UI {
 
     setStateFromURL() {
         let url = window.location.href.split("#");
+        this.setStateFromDumpString(url[1].substring(5));
+    }
 
+    setStateFromDumpString(dumpString) {
         let dump = null;
 
         try {
-            dump = pako.inflate(atob(decodeURIComponent(url[1].substring(5))),{ to: 'string' });
+            dump = pako.inflate(atob(decodeURIComponent(dumpString)),{ to: 'string' });
         } catch (error) {
             if (error === "incorrect header check") {
-                dump = atob(decodeURIComponent(url[1].substring(5)));
+                dump = atob(decodeURIComponent(dumpString));
             } else {
                 console.log(error);
                 return;
