@@ -1,1 +1,9 @@
 *.DS_Store
+*.gz
+*.aux
+*.bbl
+*.blg
+*.fdb*
+*.fls
+*.log
+*.out
