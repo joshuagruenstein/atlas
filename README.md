@@ -2,6 +2,8 @@
 
 Interactive webapp for loss surface visualization.
 
+Available online at https://joshuagruenstein.github.io/atlas/.
+
 ### Running Locally 
 
 npm install http-server
